@@ -33,7 +33,7 @@ public:
 	void drawMonsterInfo(int x, int y);
 
 	void turnUpdate();
-	void frameUpdate();
+	void frameUpdate(float deltaTime);
 
 	bool movePlayer(int direction);
 	bool playerPasses();

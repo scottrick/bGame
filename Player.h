@@ -20,6 +20,9 @@ public:
 
 	int getCurrentHP();
 	int getMaxHP();
+	float getHealthPercent() { return (float)getCurrentHP() / (float)getMaxHP(); }
+
+	bool isInjured() { return getCurrentHP() != getMaxHP(); }
 	
 	int getHP();
 	int getAC();
@@ -80,7 +83,7 @@ public:
 	SColor* getColor();
 
 	void turnUpdate();
-	void frameUpdate();
+	void frameUpdate(float deltaTime);
 private:
 	void renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor);
 

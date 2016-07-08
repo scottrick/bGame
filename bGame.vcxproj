@@ -83,6 +83,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -90,6 +91,7 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="BoardLocation.cpp" />
     <ClCompile Include="Effect.cpp" />
+    <ClCompile Include="FrameTimer.cpp" />
     <ClCompile Include="Gib.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="ItemAttribute.cpp" />
@@ -108,6 +110,7 @@
     <ClInclude Include="BoardLocation.h" />
     <ClInclude Include="def.h" />
     <ClInclude Include="Effect.h" />
+    <ClInclude Include="FrameTimer.h" />
     <ClInclude Include="Gib.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="ItemAttribute.h" />
@@ -115,11 +118,20 @@
     <ClInclude Include="MessageList.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
+    <ClInclude Include="resource2.h" />
     <ClInclude Include="SColor.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="XTriangle.h" />
     <ClInclude Include="XVector.h" />
     <ClInclude Include="XVertex.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="bGame.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="bGame.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

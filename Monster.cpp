@@ -66,26 +66,39 @@ void Monster::generate() { //generate monster based on given level
 
 	int random;
 
-	if (color == NULL) {
-		color = new SColor(0.4f + 0.11f * level, 0.12f + 0.02f * level, 0.12f + 0.02f * level);
+	float startRed = 0.3f;
+	float endRed = 1.0f;
+	float startGreen = 0.5f;
+	float endGreen = 0.0f;
+	float startBlue = 0.5f;
+	float endBlue = 0.0f;
+	int levelMax = 7; //where the end color is reached
+
+	if (!color) {
+		int diff = levelMax - level - 1;
+		float percentOfEnd = (float)level / (float)levelMax;
+		float percentOfStart = 1.0f - percentOfEnd;
+
+		color = new SColor(
+			percentOfStart * startRed + percentOfEnd * endRed,
+			percentOfStart * startGreen + percentOfEnd * endGreen,
+			percentOfStart * startBlue + percentOfEnd * endBlue);
 	}
 
 	//generate poly info
 	stacks = Utility::generateRandomInt(MONSTER_POLY_MAX - MONSTER_POLY_MIN) + MONSTER_POLY_MIN;
 	slices = Utility::generateRandomInt(MONSTER_POLY_MAX - MONSTER_POLY_MIN) + MONSTER_POLY_MIN;
 
+	rotationX = Utility::generateRandomFloat(2.0f) - 1.0f;
+	rotationY = Utility::generateRandomFloat(2.0f) - 1.0f;
+	rotationZ = Utility::generateRandomFloat(2.0f) - 1.0f;
+
 	//generate rotation info
 	if (dragon) {
-		rotationX = Utility::generateRandomFloat(2.0f) - 1.0f;
-		rotationY = Utility::generateRandomFloat(2.0f) - 1.0f;
-		rotationZ = Utility::generateRandomFloat(2.0f) - 1.0f;
-		degrees = 10.0f;
+		degrees = DRAGON_SPIN;
 	}
 	else {
 		degrees = (Utility::generateRandomFloat(MONSTER_SPIN_MAX - MONSTER_SPIN_MIN) + MONSTER_SPIN_MIN) * (float)level;
-		rotationX = Utility::generateRandomFloat(2.0f) - 1.0f;
-		rotationY = Utility::generateRandomFloat(2.0f) - 1.0f;
-		rotationZ = Utility::generateRandomFloat(2.0f) - 1.0f;
 	}
 
 	random = Utility::generateRandomInt(level);
@@ -268,7 +281,7 @@ void Monster::renderBitmapString(float x, float y, float z, void *font, string t
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
-	strcpy(line, theString.substr(0, 74).c_str());
+	strcpy_s(line, theString.substr(0, 74).c_str());
 	
 	char *c;
 	glRasterPos3f(x, y, z);
@@ -388,7 +401,7 @@ void Monster::draw(int drawOption) {
 		glPopMatrix();
 	}
 
-	glColor3f(color->getR(), color->getG(), color->getB());
+	glColor3f(0.9f, 0.9f, 0.9f);
 	glTranslatef(0.0f, 0.0f, -3.0f);
 	
 	//translate based on moving and direction
@@ -426,26 +439,49 @@ void Monster::draw(int drawOption) {
 		//cout << color->getR() << "  " << color->getG() << "  " << color->getB() << endl;
 
 		buffer << getLevel() << "  " << (int)(((float)getCurrentHP() / (float)getMaxHP()) * 100.0f) << "%";
-		renderBitmapString(-0.98f, 0.98f, -0.1f, GLUT_BITMAP_HELVETICA_10, buffer.str(), color);
+		renderBitmapString(-0.98f, -0.98f, -0.1f, GLUT_BITMAP_HELVETICA_10, buffer.str(), color);
 	}
 
+	//draw health bar if injured 
+	if (isInjured()) {
+		float x1 = -1.0f;
+		float y1 = 1.15f;
+		float x2 = 1.0f;
+		float y2 = 0.75f;
+
+		glDisable(GL_LIGHTING);
+		glColor4f(0.65f, 0.0f, 0.0f, 1.0f);
+
+		float width = (x2 - x1) * getHealthPercent();
+		glRectf(x1, y1, x1 + width, y2);
+
+		glEnable(GL_LIGHTING);
+	}
+
+	glColor3f(color->getR(), color->getG(), color->getB());
 	glRotatef(currentDegrees, rotationX, rotationY, rotationZ);
-	glScalef(0.95f, 0.95f, 0.95f);
 
 	if (dragon) {
 		//glutSolidDodecahedron();
 		//glutSolidTetrahedron();
 		//glutSolidOctahedron();
 		//glutSolidTeapot(1);
+		glScalef(1.25f, 1.25f, 1.25f);
 		glutSolidIcosahedron();
 	}
 	else {
-		glutSolidSphere(0.85f, slices, stacks);
+		//glutSolidCube(1.4f);
+		//glutSolidTorus(0.4f, 0.7f, 16, 16);
+		//glutSolidCone(0.7f, 1.4f, 16, 16);  //looks stupid
+
+		//glScalef(0.6f, 0.6f, 0.6f);
+		//glutSolidDodecahedron();
+		glutSolidSphere(0.95f, slices, stacks);
 	}
 }	
 
-void Monster::frameUpdate() {
-	currentDegrees += degrees;
+void Monster::frameUpdate(float deltaTime) {
+	currentDegrees += degrees * deltaTime;
 	if (currentDegrees > 360.0f) {
 		currentDegrees -= 360.0f;
 	}

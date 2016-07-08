@@ -255,7 +255,7 @@ void Player::drawPlayerInfo() {
 	buffer.str("");
 	buffer.clear();
 	buffer << getCurrentHP() << " / " << getMaxHP();
-	renderBitmapString(-0.1f, (HEALTH_Y_BOTTOM + HEALTH_Y_TOP) / 2.0f - 0.02f, -0.11f, GLUT_BITMAP_HELVETICA_12, buffer.str(), renderColor);
+	renderBitmapString(-0.1f, (HEALTH_Y_BOTTOM + HEALTH_Y_TOP) / 2.0f - 0.035f, -0.11f, GLUT_BITMAP_HELVETICA_12, buffer.str(), renderColor);
 	delete renderColor;
 
 	//draw kill count and # of dragons slain
@@ -322,7 +322,7 @@ void Player::renderBitmapString(float x, float y, float z, void *font, string th
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
-	strcpy(line, theString.substr(0, 74).c_str());
+	strcpy_s(line, theString.substr(0, 74).c_str());
 	
 	char *c;
 	glRasterPos3f(x, y, z);
@@ -501,6 +501,22 @@ void Player::draw(int drawOption) {
 		renderBitmapString(-0.98f, 0.98f, -0.1f, GLUT_BITMAP_HELVETICA_10, buffer.str(), healthColor);
 	}
 
+	//draw health bar if injured 
+	if (isInjured()) {
+		float x1 = -1.0f;
+		float y1 = 1.15f;
+		float x2 = 1.0f;
+		float y2 = 0.75f;
+
+		glDisable(GL_LIGHTING);
+		glColor4f(0.85f, 0.0f, 0.0f, 1.0f);
+
+		float width = (x2 - x1) * getHealthPercent();
+		glRectf(x1, y1, x1 + width, y2);
+
+		glEnable(GL_LIGHTING);
+	}
+
 	glRotatef(currentDegrees, rotationX, rotationY, rotationZ);
 	glScalef(0.95f, 0.95f, 0.95f);
 
@@ -510,7 +526,7 @@ void Player::draw(int drawOption) {
 	glutSolidOctahedron();
 }
 
-void Player::frameUpdate() {
+void Player::frameUpdate(float deltaTime) {
 	//for testing
 	/*
 	if (getCurrentHP() <= 0) {
@@ -518,7 +534,7 @@ void Player::frameUpdate() {
 	}
 	*/
 
-	currentDegrees += degrees;
+	currentDegrees += degrees * deltaTime;
 	if (currentDegrees > 360.0f) {
 		currentDegrees -= 360.0f;
 	}

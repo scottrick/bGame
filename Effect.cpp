@@ -36,17 +36,15 @@ void Effect::initialize() {
 		for (int i = 0; i < numberOfGibs; i++) {
 			newGib = new Gib(color->generateSimilarColor());
 			
-			velocity = Utility::generateRandomFloat(2.0f);
+			velocity = Utility::generateRandomFloat(26.0f) + 2.0f;
+			float randomAngle = Utility::generateRandomFloat(360.0f);
 
-			newGib->setVelocityX((Utility::generateRandomFloat(2.0f) - 1.0f) * velocity);
-				
-			velocity = sqrt((velocity * velocity) - (newGib->getVelocityX() * newGib->getVelocityX()));
-			if (Utility::generateRandomInt(1) == 0) {
-				velocity = -velocity;
-			}
-			
-			newGib->setVelocityY(velocity);
-			newGib->setVelocityZ(-(Utility::generateRandomFloat(10.0f)) - 2.0f);
+			float randomX = cos(randomAngle) * velocity;
+			float randomY = sin(randomAngle) * velocity;
+
+			newGib->setVelocityX(randomX);
+			newGib->setVelocityY(randomY);
+			newGib->setVelocityZ(-(Utility::generateRandomFloat(10.0f)) - 10.0f);
 			
 			gibs.push_back(newGib);
 		}
@@ -55,18 +53,12 @@ void Effect::initialize() {
 	}
 }	
 
-void Effect::frameUpdate() {
+void Effect::frameUpdate(float deltaTime) {
 	for (unsigned int i = 0; i < gibs.size(); i++) {
-		gibs.at(i)->frameUpdate();
+		gibs.at(i)->frameUpdate(deltaTime);
 
 		//remove gib if it has expired
 		if (gibs.at(i)->getExpired()) {
-			//cout << "Gib that expired" << endl;
-			//gibs.at(i)->print();
-
-			//cout << "Gib being erased" << endl;
-			//(*(gibs.begin() + i))->print();
-
 			delete gibs.at(i);
 			gibs.erase(gibs.begin() + i);
 

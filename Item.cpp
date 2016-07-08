@@ -525,7 +525,7 @@ void Item::renderBitmapString(float x, float y, float z, void *font, string theS
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
-	strcpy(line, theString.substr(0, 74).c_str());
+	strcpy_s(line, theString.substr(0, 74).c_str());
 	
 	char *c;
 	glRasterPos3f(x, y, z);

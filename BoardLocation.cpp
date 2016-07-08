@@ -254,9 +254,9 @@ bool BoardLocation::getAvailable() {
 	}
 }
 
-void BoardLocation::frameUpdate() {
+void BoardLocation::frameUpdate(float deltaTime) {
 	for (unsigned int i = 0; i < effects.size(); i++) {
-		effects.at(i)->frameUpdate();
+		effects.at(i)->frameUpdate(deltaTime);
 
 		if (effects.at(i)->getExpired()) {
 			delete effects.at(i);

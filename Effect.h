@@ -16,7 +16,7 @@ public:
 
 	~Effect();
 
-	void frameUpdate();
+	void frameUpdate(float deltaTime);
 
 	void draw();
 

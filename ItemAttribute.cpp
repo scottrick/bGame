@@ -76,7 +76,7 @@ void ItemAttribute::generateAttribute(int newLevel) {
 		hp = (newLevel * 3) + Utility::generateRandomInt(newLevel * 2);
 	}
 	else if (random <= 0.45f) { //ac bonus
-		ac = newLevel;
+		ac = newLevel + Utility::generateRandomInt(1);
 	}
 	else if (random <= 0.6f) { //ar bonus
 		ar = newLevel;
@@ -85,7 +85,7 @@ void ItemAttribute::generateAttribute(int newLevel) {
 		reg = (newLevel + 2) / 3;
 	}
 	else if (random <= 0.8f) { //damage reduction bonus
-		dr = (newLevel + 1) / 2;
+		dr = (newLevel + 1) / 2 + Utility::generateRandomInt(1);
 	}
 	else if (random <= 0.9f) { //light radius bonus
 		light = (newLevel + 1) / 2;

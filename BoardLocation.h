@@ -58,7 +58,7 @@ public:
 
 	void initializeTerrain();
 
-	void frameUpdate();
+	void frameUpdate(float deltaTime);
 
 	void addEffect(Effect* newEffect);
 	int getEffectsSize();

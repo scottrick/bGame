@@ -21,7 +21,10 @@ public:
 
 	int getMaxHP();
 	int getCurrentHP();
+	float getHealthPercent() { return (float)getCurrentHP() / (float)getMaxHP(); }
 	void changeHealthBy(int changeBy);
+
+	bool isInjured() { return getCurrentHP() != getMaxHP(); }
 	
 	int getAC();
 	int getAR();
@@ -49,7 +52,7 @@ public:
 	void draw(int drawOption);
 
 	void turnUpdate();
-	void frameUpdate();
+	void frameUpdate(float deltaTime);
 
 	SColor* getColor();
 

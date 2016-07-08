@@ -269,7 +269,7 @@ void Board::initializeBoard() {
 	//place four dragons
 	
 	//dragon ONE int bottom left quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Green Dragon", true, new SColor(0.1f, 0.9f, 0.1f));
+	newMonster = new Monster(DRAGON_LEVEL, "Green Dragon", true, new SColor(0.1f, 0.85f, 0.1f));
 	int xx = 0;
 	int yy = 0;
 	int quarter = BOARD_SIZE / 4;
@@ -289,7 +289,7 @@ void Board::initializeBoard() {
 	monsterCount++;
 
 	//dragon TWO in bottom right quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Bronze Dragon", true, new SColor(0.85f, 0.7f, 0.35f));
+	newMonster = new Monster(DRAGON_LEVEL, "Bronze Dragon", true, new SColor(0.8f, 0.5f, 0.2f));
 	
 	xx = 0;
 	yy = 0;
@@ -309,7 +309,7 @@ void Board::initializeBoard() {
 	monsterCount++;
 
 	//dragon THREE int top left quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Blue Dragon", true, new SColor(0.1f, 0.1f, 0.9f));
+	newMonster = new Monster(DRAGON_LEVEL, "Blue Dragon", true, new SColor(0.1f, 0.1f, 0.85f));
 	
 	xx = 0;
 	yy = 0;
@@ -329,7 +329,7 @@ void Board::initializeBoard() {
 	monsterCount++;
 
 	//dragon FOUR int top right quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Black Dragon", true, new SColor(0.2f, 0.2f, 0.2f));
+	newMonster = new Monster(DRAGON_LEVEL, "Black Dragon", true, new SColor(0.15f, 0.15f, 0.15f));
 	
 	xx = 0;
 	yy = 0;
@@ -609,7 +609,7 @@ Player* Board::getPlayer() {
 	return thePlayer;
 }
 
-void Board::frameUpdate() {
+void Board::frameUpdate(float deltaTime) {
 	if (getGameOver() && (thePlayer->getLIGHT() < (BOARD_SIZE * 2))) {
 		thePlayer->setLight(thePlayer->getLIGHT() + 1);
 	}
@@ -626,15 +626,15 @@ void Board::frameUpdate() {
 
 	//update the monsters
 	for (unsigned int i = 0; i < monsters.size(); i++) {
-		monsters[i]->frameUpdate();
+		monsters[i]->frameUpdate(deltaTime);
 	}
 
 	//update the player
-	thePlayer->frameUpdate();
+	thePlayer->frameUpdate(deltaTime);
 
 	for (int x = 0; x < BOARD_SIZE; x++) {
 		for (int y = 0; y < BOARD_SIZE; y++) {
-			locations[x][y]->frameUpdate();
+			locations[x][y]->frameUpdate(deltaTime);
 		}
 	}
 }	
@@ -1405,7 +1405,7 @@ void Board::renderBitmapString(float x, float y, float z, void *font, string the
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
-	strcpy(line, theString.substr(0, 74).c_str());
+	strcpy_s(line, theString.substr(0, 74).c_str());
 	
 	char *c;
 	glRasterPos3f(x, y, z);

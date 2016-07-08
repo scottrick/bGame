@@ -16,7 +16,7 @@ const int SOUTH = 2;
 const int EAST = 3;
 const int WEST = 4;
 
-const int TURN_FRAME_LENGTH = 16;
+const int TURN_FRAME_LENGTH = 24;
 
 const float COLOR_VARIATION = 0.04f;
 
@@ -39,7 +39,7 @@ const int HELM = 4;
 const int MONSTER_DEATH = 1;
 
 //gravity constant per frame
-const float GRAVITY = 0.03f;
+const float GRAVITY = 15.0f;
 
 const float MONSTER_CHANCE = 0.075f;
 
@@ -95,8 +95,10 @@ const int DRAW_INFO = 1;
 const string RANDOM_NAMES[] = {"Raphael", "Rand", "Lothar", "Michael", "James", "Richard", "Alexi", "Brienne", "Heather", "Sarah", "Brigham", "Fred", "Ben", "Donatello", "Leonardo", "Splinter", "Catelyn", "Arya", "Jon", "Samwise"};
 const int RANDOM_NAMES_SIZE = 20;
 
-const float MONSTER_SPIN_MIN = 0.3f;
-const float MONSTER_SPIN_MAX = 5.0f;
+const float MONSTER_SPIN_MIN = 12.0f;
+const float MONSTER_SPIN_MAX = 30.0f;
+
+const float DRAGON_SPIN = 210.0f;
 
 const int MONSTER_POLY_MIN = 3;
 const int MONSTER_POLY_MAX = 9;

@@ -18,13 +18,12 @@ public:
 	void setVelocityZ(float newVelocityZ);
 
 	float getVelocityX();
-	//void setAccelerateZ(float newAccelerateZ);
 
 	void setScale(float newScale);
 
 	bool getExpired();
 
-	void frameUpdate();
+	void frameUpdate(float deltaTime);
 
 	void draw();
 
