@@ -1,21 +1,16 @@
-//***********************************************************
+//////////////////////////////////////
 //
-// Scott Atkins
-// ID # 2728123
-// 
-// CSCI 5107
-// Assignment Four, Part One, Two, and Three
-// 
-// December 9th, 2005
-// 
-//***********************************************************
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
 
 #ifndef SCOLOR
 #define SCOLOR
 
 #include "Utility.h"
 #include "def.h"
-#include <iostream>
 using namespace std;
 
 class SColor {
@@ -32,6 +27,11 @@ public:
 	int getIntR();
 	int getIntG();
 	int getIntB();
+
+	void setR(float newR);
+	void setG(float newG);
+	void setB(float newB);
+	void setAll(float newAll);
 
 	SColor* generateSameColor();
 	SColor* generateSimilarColor();

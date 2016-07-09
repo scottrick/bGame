@@ -1,25 +1,21 @@
-//***********************************************************
+//////////////////////////////////////
 //
-// Scott Atkins
-// ID # 2728123
-// 
-// CSCI 5107
-// Assignment Four, Part One, Two, and Three
-// 
-// December 9th, 2005
-// 
-//***********************************************************
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
 
 #include "SColor.h"
 
-SColor:: SColor() {
+SColor::SColor() {
 	r = Utility::generateRandomFloat(1.0f);
 	g = Utility::generateRandomFloat(1.0f);
 	b = Utility::generateRandomFloat(1.0f);
 }
 
 SColor::SColor(float rr, float gg, float bb) {
-	
+
 	if (rr < 0) {
 		rr = 0;
 	}
@@ -64,8 +60,8 @@ SColor::~SColor() {
 }
 
 void SColor::print() {
-	cout << "SColor " << this << ": " << r << " " << g << " " << b << endl;
-}	
+	//cout << "SColor " << this << ": " << r << " " << g << " " << b << endl;
+}
 
 int SColor::getIntB() {
 	float bb = b * 255;
@@ -99,7 +95,7 @@ SColor* SColor::multiplyBy(float x) {
 	float gg = g * x;
 	float bb = b * x;
 	return new SColor(rr, gg, bb);
-}	
+}
 
 SColor* SColor::addTo(SColor* addThis) {
 	float newR = r + addThis->getR();
@@ -124,4 +120,22 @@ SColor* SColor::generateSimilarColor() {
 
 SColor* SColor::generateSameColor() {
 	return new SColor(r, g, b);
+}
+
+void SColor::setR(float newR) {
+	r = newR;
+}
+
+void SColor::setG(float newG) {
+	g = newG;
+}
+
+void SColor::setB(float newB) {
+	b = newB;
+}
+
+void SColor::setAll(float newAll) {
+	r = newAll;
+	g = newAll;
+	b = newAll;
 }

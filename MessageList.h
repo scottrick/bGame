@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #ifndef MESSAGE_LIST
 #define MESSAGE_LIST
 
@@ -6,7 +14,7 @@
 using namespace std;
 
 class MessageList {
-public: 
+public:
 	MessageList();
 	MessageList(int newNum);
 	~MessageList();

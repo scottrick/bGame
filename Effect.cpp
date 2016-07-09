@@ -48,8 +48,6 @@ void Effect::initialize() {
 			
 			gibs.push_back(newGib);
 		}
-	
-		//cout << "Effect created with " << numberOfGibs << " gibs" << endl;
 	}
 }	
 

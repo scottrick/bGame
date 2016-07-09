@@ -27,7 +27,6 @@ public:
 
 	void draw();
 
-	void print();
 private:
 	void initialize();
 

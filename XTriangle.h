@@ -1,14 +1,10 @@
-//***********************************************************
+//////////////////////////////////////
 //
-// Scott Atkins
-// ID # 2728123
-// 
-// CSCI 5108
-// Project
-// 
-// April 24th, 2006
-// 
-//***********************************************************
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
 
 #ifndef XTRIANGLE
 #define XTRIANGLE
@@ -28,7 +24,7 @@ public:
 	XVertex* getVertexOne();
 	XVertex* getVertexTwo();
 	XVertex* getVertexThree();
-	
+
 	XVector getNormal();
 	XVector calculateNormal(XVertex* vertexOne, XVertex* vertexTwo, XVertex* vertexThree);
 private:

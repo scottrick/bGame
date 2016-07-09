@@ -1,14 +1,10 @@
-//***********************************************************
+//////////////////////////////////////
 //
-// Scott Atkins
-// ID # 2728123
-// 
-// CSCI 5108
-// Project
-// 
-// April 24th, 2006
-// 
-//***********************************************************
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
 
 #include "XVector.h"
 
@@ -56,10 +52,10 @@ XVector XVector::crossProduct(XVector crossThis) {
 	float xx, yy, zz;
 
 	xx = (y * crossThis.getZ()) - (z * crossThis.getY());
-	yy = - ((x * crossThis.getZ()) - (z * crossThis.getX()));
+	yy = -((x * crossThis.getZ()) - (z * crossThis.getX()));
 	zz = (x * crossThis.getY()) - (y * crossThis.getX());
 
 	XVector returnThis = XVector(xx, yy, zz);
-	
+
 	return returnThis;
 }

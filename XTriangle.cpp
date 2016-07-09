@@ -1,14 +1,10 @@
-//***********************************************************
+//////////////////////////////////////
 //
-// Scott Atkins
-// ID # 2728123
-// 
-// CSCI 5108
-// Project
-// 
-// April 24th, 2006
-// 
-//***********************************************************
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
 
 #include "XTriangle.h"
 
@@ -39,7 +35,7 @@ void XTriangle::calculateNormal() {
 	XVector vectorOne, vectorTwo;
 	vectorOne = XVector(vertexTwo->getX() - vertexOne->getX(), vertexTwo->getY() - vertexOne->getY(), vertexTwo->getZ() - vertexOne->getZ());
 	vectorTwo = XVector(vertexThree->getX() - vertexOne->getX(), vertexThree->getY() - vertexOne->getY(), vertexThree->getZ() - vertexOne->getZ());
-	
+
 	vectorOne = vectorOne.crossProduct(vectorTwo);
 
 	normalVector = vectorOne;
@@ -49,7 +45,7 @@ XVector XTriangle::calculateNormal(XVertex* vertexOne, XVertex* vertexTwo, XVert
 	XVector vectorOne, vectorTwo;
 	vectorOne = XVector(vertexTwo->getX() - vertexOne->getX(), vertexTwo->getY() - vertexOne->getY(), vertexTwo->getZ() - vertexOne->getZ());
 	vectorTwo = XVector(vertexThree->getX() - vertexOne->getX(), vertexThree->getY() - vertexOne->getY(), vertexThree->getZ() - vertexOne->getZ());
-	
+
 	vectorOne = vectorOne.crossProduct(vectorTwo);
 
 	return vectorOne;
@@ -72,7 +68,6 @@ XVertex* XTriangle::getVertexThree() {
 }
 
 void XTriangle::setAll(XVertex* one, XVertex* two, XVertex* three) {
-	//delete vertexOne, vertexTwo, vertexThree;
 	vertexOne = one;
 	vertexTwo = two;
 	vertexThree = three;

@@ -1,6 +1,15 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #ifndef BOARD
 #define BOARD
 
+#include "HighscoreList.h"
 #include "Effect.h"
 #include "def.h"
 #include "BoardLocation.h"
@@ -37,19 +46,21 @@ public:
 
 	bool movePlayer(int direction);
 	bool playerPasses();
-	
+
 	void updateMonsters();
-		
-	void testLocations();
-	void testEffect();
+
+	HighscoreList* getHighscores();
 
 	float calculateVisionLighting(int locationX, int locationY);
 private:
+	void loadHighscores();
+	void checkForNewHighscore();
+
 	void renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor);
 	void updateMonster(Monster* thisMonster);
 
 	Monster* createAppropriateMonster();
-	
+
 	void playerAttack(int direction);
 
 	void monsterAttack(Monster* thisMonster, int direction);
@@ -64,12 +75,6 @@ private:
 
 	void placeRandomMonster();
 
-	void testPlayer();
-	void testItem();
-	void testMonster();
-	void testEffect2();
-	void testBoardLocation();
-
 	void drawInfoBorder();
 
 	void initialize();
@@ -82,16 +87,22 @@ private:
 	void addWelcomeMessages();
 
 	int monsterCount;
-			
+
+	int deadLight;
+
 	Player* thePlayer;
 
-	bool fog, cheated, gameOver, playerWin;
+	int tip;
+
+	bool fog, cheated, gameOver, playerWin, newScore;
 
 	SColor *mountains, *lake, *grass, *plains;
 
 	BoardLocation* locations[BOARD_SIZE][BOARD_SIZE];
 	vector<Monster*> monsters;
 	vector<Monster*> dragons; //points to the four dragons
+
+	HighscoreList* highscores;
 
 	MessageList* theMessageList;
 

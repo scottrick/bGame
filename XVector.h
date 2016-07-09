@@ -1,20 +1,13 @@
-//***********************************************************
+//////////////////////////////////////
 //
-// Scott Atkins
-// ID # 2728123
-// 
-// CSCI 5108
-// Project
-// 
-// April 24th, 2006
-// 
-//***********************************************************
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
 
 #ifndef XVECTOR
 #define XVECTOR
-
-//#include <iostream>
-//using namespace std;
 
 class XVector {
 public:

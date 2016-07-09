@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #ifndef PLAYER
 #define PLAYER 
 
@@ -8,7 +16,6 @@
 #include "SColor.h"
 #include <GL/glut.h>
 #include <sstream>
-//#include <iostream>
 #include <string>
 using namespace std;
 
@@ -16,14 +23,16 @@ class Player {
 public:
 	Player();
 	Player(string newName);
+	Player(int dkills, int kills);
 	~Player();
 
 	int getCurrentHP();
 	int getMaxHP();
 	float getHealthPercent() { return (float)getCurrentHP() / (float)getMaxHP(); }
-
 	bool isInjured() { return getCurrentHP() != getMaxHP(); }
-	
+
+	MessageList* createHighscoreList();
+
 	int getHP();
 	int getAC();
 	int getAR();
@@ -63,14 +72,15 @@ public:
 
 	bool isDead();
 
-	//used when player is dead to lightup the whole board in a cool fashion  :P
+	void setCheated();
+
 	void setLight(int newLight);
 
 	void signalMoving(int direction);
 
 	void changeHealthBy(int changeBy);
 
-	void print();	
+	void print();
 
 	void signalAttacked(bool success);
 	void signalAttacking(int direction);
@@ -79,6 +89,10 @@ public:
 	void signalNewItemAvailable(Item* theNewItem);
 	bool getNewItemAvailable();
 	Item* getNewItem();
+	Item* getItem(int type);
+
+	int getActions();
+	void incrementActions();
 
 	SColor* getColor();
 
@@ -92,6 +106,8 @@ private:
 	void initialize();
 	void equipmentUpdate();
 
+	bool cheated;
+
 	//holds a new item while the player decides to keep it or not
 	bool newItemAvailable;
 	Item* newItem;
@@ -104,6 +120,7 @@ private:
 	int baseAC, baseHP, currentHP, baseLIGHT, baseREG;
 	int hp, ac, ar, dmg, reg, dr, light, ww;
 	int killCount, dragonsSlain;
+	int actions;
 	string name;
 
 	int movingFrame;

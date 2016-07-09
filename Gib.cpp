@@ -79,10 +79,6 @@ void Gib::draw() {
 	glutSolidTetrahedron();
 }
 
-void Gib::print() {
-	cout << "GIB " << this << endl;
-}
-
 float Gib::getVelocityX() {
 	return velocityX;
 }

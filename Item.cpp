@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #include "Item.h"
 
 Item::Item() {
@@ -10,9 +18,7 @@ Item::Item(int newLevel) {
 	//create new item of level newLevel, random type
 	initialize();
 
-	//cout << "NEW LEVEL  " << newLevel << endl;
-
-	generate(newLevel);	
+	generate(newLevel);
 }
 
 Item::Item(int newLevel, int newType) {
@@ -54,20 +60,20 @@ void Item::generate(int newLevel) {
 
 	//set the item name
 	createName();
-	
+
 	//generate base stats of item here
 	if (type == MAINHAND) { //mainhand has basic dmg bonus
 		avgdmg = 4 + level;
 		dmgvar = Utility::generateRandomInt(level) + 1;
-	}	
+	}
 	if (type == OFFHAND) { //offhand has small innate hitpoint bonus
 		baseAC += (level + 4) / 4;
 		hp += ((level + 1) / 2) + Utility::generateRandomInt(level);
-	}	
+	}
 	if (type == CHEST) { //chest has innate damage reduction bonus
 		baseAC += (level + 3) / 3;
 		dr += (level + 1) / 3;
-	}	
+	}
 	if (type == HELM) { //helm has innate regeneration bonus
 		baseAC += (level + 3) / 3;
 		reg += (level + 1) / 4;
@@ -97,7 +103,7 @@ void Item::generate(int newLevel) {
 				attributes[numAttributes++] = ItemAttribute(level + 1);
 			}
 			else {
-				cout << "Invalid random number.  Item::generate()" << endl;
+				//cout << "Invalid random number.  Item::generate()" << endl;
 			}
 		}
 	}
@@ -108,27 +114,27 @@ void Item::generate(int newLevel) {
 void Item::createName() {
 	//first select item base name
 	switch (type) {
-		case MAINHAND:
-			name = MAIN_HAND_STRINGS[Utility::generateRandomInt(MAIN_HAND_STRINGS_SIZE - 1)];		
-			break;
-		case OFFHAND:
-			name = OFF_HAND_STRINGS[Utility::generateRandomInt(OFF_HAND_STRINGS_SIZE - 1)];
-			break;
-		case CHEST:
-			name = CHEST_STRINGS[Utility::generateRandomInt(CHEST_STRINGS_SIZE - 1)];
-			break;
-		case HELM:	
-			name = HELM_STRINGS[Utility::generateRandomInt(HELM_STRINGS_SIZE - 1)];
-			break;
-		default:
-			name = "BAD NAME";
-			break;
+	case MAINHAND:
+		name = MAIN_HAND_STRINGS[Utility::generateRandomInt(MAIN_HAND_STRINGS_SIZE - 1)];
+		break;
+	case OFFHAND:
+		name = OFF_HAND_STRINGS[Utility::generateRandomInt(OFF_HAND_STRINGS_SIZE - 1)];
+		break;
+	case CHEST:
+		name = CHEST_STRINGS[Utility::generateRandomInt(CHEST_STRINGS_SIZE - 1)];
+		break;
+	case HELM:
+		name = HELM_STRINGS[Utility::generateRandomInt(HELM_STRINGS_SIZE - 1)];
+		break;
+	default:
+		name = "BAD NAME";
+		break;
 	}
 
 	//items with level less than 1 do not recieve other name attributes
 	if (level < 1) {
 		return;
-	}	
+	}
 
 	float random = Utility::generateRandomFloat(1.0f);
 
@@ -226,6 +232,7 @@ int Item::getDmgBonus() {
 }
 
 void Item::print() {
+	/*
 	cout << endl << getName() << endl;
 	cout << "Item Level " << getLevel() << "  ||  " << getNumAttributes() << " Attributes" << endl;
 	cout << "Item Type = " << type << endl;
@@ -243,8 +250,9 @@ void Item::print() {
 	cout << "Attribute list: " << endl;
 
 	for (int i = 0; i < numAttributes; i++) {
-		cout << attributes[i].toString() << endl;
+	cout << attributes[i].toString() << endl;
 	}
+	*/
 }
 
 MessageList* Item::createDisplayMsgList() {
@@ -267,29 +275,29 @@ MessageList* Item::createDisplayMsgList() {
 	SColor* newColor;
 
 	switch (type) {
-		case MAINHAND:
-			buffer << "[Main Hand]  " << getDmgMin() << " to " << getDmgMax() << " Base Damage";
-			newColor = new SColor(MAINHAND_COLOR[0], MAINHAND_COLOR[1], MAINHAND_COLOR[2]);
-			break;
-		case OFFHAND:
-			buffer << "[Off Hand]  " << baseAC << " Innate Armor";
-			newColor = new SColor(OFFHAND_COLOR[0], OFFHAND_COLOR[1], OFFHAND_COLOR[2]);
-			break;
-		case CHEST:
-			buffer << "[Chest]  " << baseAC << " Innate Armor";
-			newColor = new SColor(CHEST_COLOR[0], CHEST_COLOR[1], CHEST_COLOR[2]);
-			break;
-		case HELM:
-			buffer << "[Head]  " << baseAC << " Innate Armor";
-			newColor = new SColor(HELM_COLOR[0], HELM_COLOR[1], HELM_COLOR[2]);
-			break;
-		default:
-			buffer << "INVALID TYPE : Item::createDisplayMsgList()  ";
-			newColor = new SColor(1.0f, 1.0f, 1.0f);
-			break;
+	case MAINHAND:
+		buffer << "[Main Hand]  " << getDmgMin() << " to " << getDmgMax() << " Base Damage";
+		newColor = new SColor(MAINHAND_COLOR[0], MAINHAND_COLOR[1], MAINHAND_COLOR[2]);
+		break;
+	case OFFHAND:
+		buffer << "[Off Hand]  " << baseAC << " Innate Armor";
+		newColor = new SColor(OFFHAND_COLOR[0], OFFHAND_COLOR[1], OFFHAND_COLOR[2]);
+		break;
+	case CHEST:
+		buffer << "[Chest]  " << baseAC << " Innate Armor";
+		newColor = new SColor(CHEST_COLOR[0], CHEST_COLOR[1], CHEST_COLOR[2]);
+		break;
+	case HELM:
+		buffer << "[Head]  " << baseAC << " Innate Armor";
+		newColor = new SColor(HELM_COLOR[0], HELM_COLOR[1], HELM_COLOR[2]);
+		break;
+	default:
+		buffer << "INVALID TYPE : Item::createDisplayMsgList()  ";
+		newColor = new SColor(1.0f, 1.0f, 1.0f);
+		break;
 	}
 
-    newMsg = new Message(buffer.str(), newColor);
+	newMsg = new Message(buffer.str(), newColor);
 	newList->addMessage(newMsg);
 
 	//	int hp, ac, ar, reg, dr, light, ww
@@ -368,7 +376,7 @@ void Item::drawNewItem() {
 	glTranslatef(0.0f, 0.0f, -10.0f);
 	glScalef(1.0f, 1.0f, 0.05f);
 
-	glBegin(GL_QUADS); 
+	glBegin(GL_QUADS);
 	glColor4f(0.0f, 0.0f, 0.0f, 0.7f);
 	glVertex3f(-1.0f, 1.6f, 0.0f);
 	glVertex3f(1.0f, 1.6f, 0.0f);
@@ -376,7 +384,7 @@ void Item::drawNewItem() {
 	glVertex3f(-1.0f, -1.6f, 0.0f);
 
 	//draw outer border
-	glColor3f(0.8f, 0.4f, 0.11f);      
+	glColor3f(0.8f, 0.4f, 0.11f);
 	glVertex3f(-1.0f, -1.6f, -0.1f);
 	glVertex3f(-0.98f, -1.6f, -0.1f);
 	glVertex3f(-0.98f, 1.58f, -0.1f);
@@ -384,7 +392,7 @@ void Item::drawNewItem() {
 	glVertex3f(-1.0f, 1.58f, -0.1f);
 	glVertex3f(-1.0f, 1.6f, -0.1f);
 	glVertex3f(0.98f, 1.6f, -0.1f);
-	glVertex3f(0.98f, 1.58f, -0.1f);	
+	glVertex3f(0.98f, 1.58f, -0.1f);
 	glVertex3f(0.98f, 1.6f, -0.1f);
 	glVertex3f(1.0f, 1.6f, -0.1f);
 	glVertex3f(1.0f, -1.58f, -0.1f);
@@ -403,7 +411,7 @@ void Item::drawNewItem() {
 	glVertex3f(-0.98f, 1.57f, -0.1f);
 	glVertex3f(-0.98f, 1.58f, -0.1f);
 	glVertex3f(0.97f, 1.58f, -0.1f);
-	glVertex3f(0.97f, 1.57f, -0.1f);	
+	glVertex3f(0.97f, 1.57f, -0.1f);
 	glVertex3f(0.97f, 1.58f, -0.1f);
 	glVertex3f(0.98f, 1.58f, -0.1f);
 	glVertex3f(0.98f, -1.57f, -0.1f);
@@ -411,7 +419,7 @@ void Item::drawNewItem() {
 	glVertex3f(0.98f, -1.57f, -0.1f);
 	glVertex3f(0.98f, -1.58f, -0.1f);
 	glVertex3f(-0.97f, -1.58f, -0.1f);
-	glVertex3f(-0.97f, -1.57f, -0.1f);	
+	glVertex3f(-0.97f, -1.57f, -0.1f);
 	glEnd();
 
 	glDisable(GL_BLEND);
@@ -424,8 +432,6 @@ void Item::drawNewItem() {
 	if (lightingOn[0] > 0) {
 		lightingOn[0] = 1;
 		glDisable(GL_LIGHTING);
-		//glDisable(GL_LIGHT0);
-		//glDisable(GL_COLOR_MATERIAL);		
 	}
 
 	Message* newMsg = new Message("You have found a new item!", new SColor(1.0f, 1.0f, 1.0f));
@@ -445,8 +451,6 @@ void Item::drawNewItem() {
 	//turn lighting back on if it was on
 	if (lightingOn[0]) {
 		glEnable(GL_LIGHTING);
-		//glEnable(GL_COLOR_MATERIAL);
-		//glEnable(GL_LIGHT0);
 	}
 }
 
@@ -463,7 +467,7 @@ void Item::draw() {
 	glVertex3f(-1.0f, 0.95f, -0.1f);
 	glVertex3f(-1.0f, 1.0f, -0.1f);
 	glVertex3f(0.95f, 1.0f, -0.1f);
-	glVertex3f(0.95f, 0.95f, -0.1f);	
+	glVertex3f(0.95f, 0.95f, -0.1f);
 	glVertex3f(0.95f, 1.0f, -0.1f);
 	glVertex3f(1.0f, 1.0f, -0.1f);
 	glVertex3f(1.0f, -0.95f, -0.1f);
@@ -509,7 +513,7 @@ int Item::getDmgRange() {
 	return dmgvar * 2;
 }
 
-void Item::renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor) { 
+void Item::renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor) {
 	//disable lighting if it was on
 	int lightingOn[1];
 
@@ -518,27 +522,23 @@ void Item::renderBitmapString(float x, float y, float z, void *font, string theS
 	if (lightingOn[0] > 0) {
 		lightingOn[0] = 1;
 		glDisable(GL_LIGHTING);
-		//glDisable(GL_LIGHT0);
-		//glDisable(GL_COLOR_MATERIAL);		
 	}
-		
+
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
 	strcpy_s(line, theString.substr(0, 74).c_str());
-	
+
 	char *c;
 	glRasterPos3f(x, y, z);
 
-	for (c =line; *c != '\0'; c++) {
+	for (c = line; *c != '\0'; c++) {
 		glutBitmapCharacter(font, *c);
 	}
 
 	//turn lighting back on if it was on
 	if (lightingOn[0]) {
 		glEnable(GL_LIGHTING);
-		//glEnable(GL_COLOR_MATERIAL);
-		//glEnable(GL_LIGHT0);
 	}
 }
 

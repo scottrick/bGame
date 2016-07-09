@@ -93,6 +93,8 @@
     <ClCompile Include="Effect.cpp" />
     <ClCompile Include="FrameTimer.cpp" />
     <ClCompile Include="Gib.cpp" />
+    <ClCompile Include="Highscore.cpp" />
+    <ClCompile Include="HighscoreList.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="ItemAttribute.cpp" />
     <ClCompile Include="Message.cpp" />
@@ -112,14 +114,14 @@
     <ClInclude Include="Effect.h" />
     <ClInclude Include="FrameTimer.h" />
     <ClInclude Include="Gib.h" />
+    <ClInclude Include="Highscore.h" />
+    <ClInclude Include="HighscoreList.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="ItemAttribute.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="MessageList.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="resource1.h" />
     <ClInclude Include="resource2.h" />
     <ClInclude Include="SColor.h" />
     <ClInclude Include="Utility.h" />
@@ -132,6 +134,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="bGame.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="todo.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

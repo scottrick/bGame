@@ -19,8 +19,8 @@
 using namespace std;
 
 //default window size;
-const int startingWindowX = 1024;
-const int startingWindowY = 768;
+const int startingWindowX = 1000;
+const int startingWindowY = 600;
 
 float windowX = startingWindowX;
 float windowY = startingWindowY;
@@ -33,7 +33,6 @@ void gameKeyboard(unsigned char key, int x, int y);
 void mouseMove(int x, int y);
 void mousePassiveMove(int x, int y);
 void specialKeyHandler(int key, int x, int y);
-void renderBitmapString(float x, float y, float z, void *font, string theString);
 void loopFunc();
 void initializeGame();
 void createHelpMessageList();
@@ -41,6 +40,8 @@ void turnUpdate(float deltaTime);
 
 //other function declarations
 void initializeGlut(int argc, char** argv);
+void drawMessageList(MessageList* messageList);
+void drawStandardBorder(SColor* outerColor, SColor* innerColor);
 void drawInfo();
 void drawPlayerInfo();
 void drawEquipmentInfo();
@@ -62,19 +63,21 @@ int frameProcessingCount = 0; //counter which tells when to allow player action 
 int MOUSE_X = 0;
 int MOUSE_Y = 0;
 
-int minSize = min(windowX, windowY);
-int squareSize = minSize;
+int squareSize = min(windowX, windowY);
+int leftInset = 0;
 int squareInset = 0;
-int squareInsetHalf = 0;
 
 //used when getting the character's name at the startup
 string currentNameString = "";
 string currentNameStringSuffix = "|";
 int nameStringSuffixCounter = 0;
 
+SColor* outerBorderColor = new SColor(0.8f, 0.4f, 0.11f);
+SColor* innerBorderColor = new SColor(0.91f, 0.44f, 0.13f);
+
 bool havePlayerName = false;
 
-bool DISPLAY_HELP = false; //help screen displayed instead of map when this bool is TRUE
+int DISPLAY_HELP = 0; //0 = no help,  1 = first help screen,  2 = second help screen
 bool DISPLAY_HIGH_SCORES = false;
 
 //the FrameTimer
@@ -83,8 +86,9 @@ FrameTimer timer(100, 100);
 //the GAME!
 Board* theBoard;
 
-//help message list
+//help message lists
 MessageList* helpMessageList = new MessageList(20);
+MessageList* helpMessageListTwo = new MessageList(20);
 
 void gameDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
@@ -98,36 +102,36 @@ void gameDisplay() {
 
 	if (havePlayerName) {
 		if ((DISPLAY_HIGH_SCORES) || (theBoard->getGameOver())) {
-			setViewport(0, squareInset, 0, windowY);
+			setViewport(leftInset, leftInset + squareInset, 0, windowY);
 			drawHighScores();
 		}
 		else {
 			//draw player information (top left)
-			setViewport(0, squareInset, (1.0f - PLAYER_INFO_SIZE) * windowY, windowY);
+			setViewport(leftInset, leftInset + squareInset, (1.0f - PLAYER_INFO_SIZE) * windowY, windowY);
 			drawPlayerInfo();
 
 			//draw equipment (middle left)
-			setViewport(0, squareInset, MESSAGE_INFO_SIZE * windowY, (1.0f - PLAYER_INFO_SIZE) * windowY);
+			setViewport(leftInset, leftInset + squareInset, MESSAGE_INFO_SIZE * windowY, (1.0f - PLAYER_INFO_SIZE) * windowY);
 			drawEquipmentInfo();
 
 			//draw messages (bottom left)
-			setViewport(0, squareInset, 0, MESSAGE_INFO_SIZE * windowY);
+			setViewport(leftInset, leftInset + squareInset, 0, MESSAGE_INFO_SIZE * windowY);
 			drawMessages();
 		}
 	}
 	
 	if (!havePlayerName) {
-		setViewport(squareInsetHalf, squareInsetHalf + squareSize, 0, windowY);
+		setViewport(leftInset, leftInset + squareInset + squareSize, 0, windowY);
 		drawPlayerNameScreen();		
 	}
 	//if DISPLAY_HELP not true, draw the map
 	else if (DISPLAY_HELP) {
-		setViewport(squareInset, windowX, 0, windowY);
+		setViewport(leftInset + squareInset, leftInset + squareInset + squareSize, 0, windowY);
 		drawHelp();
 	}
 	else {
 		//draw map
-		setViewport(squareInset, windowX, 0, windowY);
+		setViewport(leftInset + squareInset, leftInset + squareInset + squareSize, 0, windowY);
 		drawMap();
 	}
 
@@ -154,8 +158,8 @@ void initializeGlut(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitWindowPosition(800, 100);
 	glutInitWindowSize(startingWindowX, startingWindowY);	
-	glutCreateWindow("bGame");
-	glutFullScreen();
+	glutCreateWindow(GAME_NAME.c_str());
+	//glutFullScreen();
 
 	glEnable(GLUT_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
@@ -220,7 +224,7 @@ void turnUpdate(float deltaTime) {
 		nameStringSuffixCounter++;
 
 		//every so many frames switch the suffix so it appears to be a blinking cursor
-		if (nameStringSuffixCounter > 8) {
+		if (nameStringSuffixCounter > 24) {
 			nameStringSuffixCounter = 0;
 
 			if (currentNameStringSuffix == "|") {
@@ -369,7 +373,11 @@ void gameKeyboard(unsigned char key, int x, int y) {
 
 	//toggle HELP screen
 	if ((key == 104) || (key == 72)) {
-		DISPLAY_HELP = !DISPLAY_HELP; //toggle display help boolean
+		DISPLAY_HELP++;
+
+		if (DISPLAY_HELP > 2) {
+			DISPLAY_HELP = 0;
+		}
 	}	
 
 	//player pressed spacebar;   pass turn
@@ -378,7 +386,6 @@ void gameKeyboard(unsigned char key, int x, int y) {
 			turnProcessing = theBoard->playerPasses();
 		}
 	}
-
 }
 
 void mousePassiveMove(int x, int y) {
@@ -398,38 +405,210 @@ void setViewport(int left, int right, int bottom, int top) {
 
 //draw high scores - will replace the left information bar
 void drawHighScores() {
-	renderBitmapString(-.95f, 0.0f, -0.1f, GLUT_BITMAP_HELVETICA_18, "highscores");
+	ostringstream buffer;
+
+	int dimensions[4];
+	int selection = 0;
+	glGetIntegerv(GL_VIEWPORT, dimensions);
+
+	//check where mouse is to see if player is hovering over one of the 5 highscore boxes
+	//check mouse X position first
+	if (MOUSE_X > leftInset && MOUSE_X <= dimensions[2] + leftInset) {
+		//check mouse Y position next
+
+		//check first place
+		if ((MOUSE_Y <= (dimensions[1] + (int)((float)dimensions[3] * 0.15f))) && (MOUSE_Y >= (dimensions[1] + (int)((float)dimensions[3] * 0.05f)))) {
+			selection = 1;
+		}
+		//check second place
+		else if ((MOUSE_Y <= (dimensions[1] + (int)((float)dimensions[3] * 0.25f))) && (MOUSE_Y >= (dimensions[1] + (int)((float)dimensions[3] * 0.15f)))) {
+			selection = 2;
+		}
+		//check third place
+		else if ((MOUSE_Y <= (dimensions[1] + (int)((float)dimensions[3] * 0.35f))) && (MOUSE_Y >= (dimensions[1] + (int)((float)dimensions[3] * 0.25f)))) {
+			selection = 3;
+		}
+		//check fourth place
+		else if ((MOUSE_Y <= (dimensions[1] + (int)((float)dimensions[3] * 0.45f))) && (MOUSE_Y >= (dimensions[1] + (int)((float)dimensions[3] * 0.35f)))) {
+			selection = 4;
+		}
+		else if ((MOUSE_Y <= (dimensions[1] + (int)((float)dimensions[3] * 0.55f))) && (MOUSE_Y >= (dimensions[1] + (int)((float)dimensions[3] * 0.45f)))) {
+			selection = 5;
+		}
+	}
+
+	SColor* outer = new SColor(1.0f, 1.0f, 1.0f);
+	SColor* inner = new SColor(0.85f, 0.85f, 0.85f);
+
+	//draw top 5% of screen as label: "HIGHSCORES"
+	glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.95f), dimensions[2], (int)((float)dimensions[3] * 0.05f));
+	drawStandardBorder(outerBorderColor, innerBorderColor);
+	glColor3f(0.9f, 0.9f, 0.9f);
+	buffer << "  High Scores";
+	switch (selection) {
+	case 1:
+		buffer << " - 1st Place";
+		break;
+	case 2:
+		buffer << " - 2nd Place";
+		break;
+	case 3:
+		buffer << " - 3rd Place";
+		break;
+	case 4:
+		buffer << " - 4th Place";
+		break;
+	case 5:
+		buffer << " - 5th Place";
+		break;
+	default:
+		break;
+	}
+	Utility::renderBitmapString(-0.9f, -0.25f, 0.0f, GLUT_BITMAP_HELVETICA_18, buffer.str());
+
+	//next 10% of screen down is 1st place entry
+	glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.85f), dimensions[2], (int)((float)dimensions[3] * 0.1f));
+	if (selection == 1) {
+		drawStandardBorder(outerBorderColor, innerBorderColor);
+	}
+	else {
+		drawStandardBorder(outer, inner);
+	}
+
+	//draw 1st place
+	glColor3f(0.9f, 0.9f, 0.9f);
+	drawMessageList(theBoard->getHighscores()->getHighscore(1)->getPlayerMessageList());
+
+	//next 10% for 2nd place
+	glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.75f), dimensions[2], (int)((float)dimensions[3] * 0.1f));
+	outer->setAll(0.85f);
+	inner->setAll(0.7f);
+	if (selection == 2) {
+		drawStandardBorder(outerBorderColor, innerBorderColor);
+	}
+	else {
+		drawStandardBorder(outer, inner);
+	}
+
+	//draw 2nd place
+	glColor3f(0.9f, 0.9f, 0.9f);
+	drawMessageList(theBoard->getHighscores()->getHighscore(2)->getPlayerMessageList());
+
+	//next 10% for 3rd place
+	glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.65f), dimensions[2], (int)((float)dimensions[3] * 0.1f));
+	outer->setAll(0.7f);
+	inner->setAll(0.55f);
+	if (selection == 3) {
+		drawStandardBorder(outerBorderColor, innerBorderColor);
+	}
+	else {
+		drawStandardBorder(outer, inner);
+	}
+
+	//draw 3rd place
+	glColor3f(0.9f, 0.9f, 0.9f);
+	drawMessageList(theBoard->getHighscores()->getHighscore(3)->getPlayerMessageList());
+
+	//next 10% for 4th place
+	glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.55f), dimensions[2], (int)((float)dimensions[3] * 0.1f));
+	outer->setAll(0.55f);
+	inner->setAll(0.4f);
+	if (selection == 4) {
+		drawStandardBorder(outerBorderColor, innerBorderColor);
+	}
+	else {
+		drawStandardBorder(outer, inner);
+	}
+
+	//draw 4th place
+	glColor3f(0.9f, 0.9f, 0.9f);
+	drawMessageList(theBoard->getHighscores()->getHighscore(4)->getPlayerMessageList());
+
+	//next 10% for 5th place
+	glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.45f), dimensions[2], (int)((float)dimensions[3] * 0.1f));
+	outer->setAll(0.4f);
+	inner->setAll(0.25f);
+	if (selection == 5) {
+		drawStandardBorder(outerBorderColor, innerBorderColor);
+	}
+	else {
+		drawStandardBorder(outer, inner);
+	}
+
+	//draw 5th place
+	glColor3f(0.9f, 0.9f, 0.9f);
+	drawMessageList(theBoard->getHighscores()->getHighscore(5)->getPlayerMessageList());
+
+	//DRAW equipment for highscore on bottom part, if one of the highscores is selected
+	//none is selected
+	if (selection == 0) {
+		glViewport(dimensions[0], dimensions[1], dimensions[2], (int)((float)dimensions[3] * 0.45f));
+		drawStandardBorder(outerBorderColor, innerBorderColor);
+		glColor3f(0.85f, 0.85f, 0.85f);
+		Utility::renderBitmapString(-0.9f, 0.0f, 0.0f, GLUT_BITMAP_HELVETICA_18, "No selection");
+	}
+	//one of the highscores is selected
+	else {
+		//draw HELM for selected highscore
+		outer->setR(HELM_COLOR[0]);
+		outer->setG(HELM_COLOR[1]);
+		outer->setB(HELM_COLOR[2]);
+		glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.3375f), dimensions[2], (int)((float)dimensions[3] * 0.1125f));
+		drawStandardBorder(outer, outer);
+
+		//draw helm description
+		drawMessageList(theBoard->getHighscores()->getHighscore(selection)->getEquipFourMessageList());
+
+		//draw CHEST for selected highscore
+		outer->setR(CHEST_COLOR[0]);
+		outer->setG(CHEST_COLOR[1]);
+		outer->setB(CHEST_COLOR[2]);
+		glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.225f), dimensions[2], (int)((float)dimensions[3] * 0.1125f));
+		drawStandardBorder(outer, outer);
+
+		//draw chest description
+		drawMessageList(theBoard->getHighscores()->getHighscore(selection)->getEquipThreeMessageList());
+
+		//draw OFFHAND for selected highscore
+		outer->setR(OFFHAND_COLOR[0]);
+		outer->setG(OFFHAND_COLOR[1]);
+		outer->setB(OFFHAND_COLOR[2]);
+		glViewport(dimensions[0], dimensions[1] + (int)((float)dimensions[3] * 0.1125f), dimensions[2], (int)((float)dimensions[3] * 0.1125f));
+		drawStandardBorder(outer, outer);
+
+		//draw offhand description
+		drawMessageList(theBoard->getHighscores()->getHighscore(selection)->getEquipTwoMessageList());
+
+		//draw MAINHAND for selected highscore
+		outer->setR(MAINHAND_COLOR[0]);
+		outer->setG(MAINHAND_COLOR[1]);
+		outer->setB(MAINHAND_COLOR[2]);
+		glViewport(dimensions[0], dimensions[1], dimensions[2], (int)((float)dimensions[3] * 0.1125f));
+		drawStandardBorder(outer, outer);
+
+		//draw mainhand description
+		drawMessageList(theBoard->getHighscores()->getHighscore(selection)->getEquipOneMessageList());
+	}
 }
 
 void drawInfo() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
+	float textStartX = 0.875f;
+	float startX = 0.85f;
+	float endX = 1.0f;
+	float botY = 0.88f;
+	float topY = 1.0f;
+	float z = -0.4f;
+	float z2 = -0.5f;
+
 	glBegin(GL_QUADS);
 	glColor4f(0.1f, 0.1f, 0.1, 0.7f);
-	glVertex3f(0.7f, 0.75f, -0.4f);
-	glVertex3f(0.7f, 1.0f, -0.4f);
-	glVertex3f(1.0f, 1.0f, -0.4f);
-	glVertex3f(1.0f, 0.75f, -0.4f);
-
-	//draw outer border
-	glColor3f(0.8f, 0.4f, -0.45f);      
-	glVertex3f(0.7f, 0.75f, -0.45f);
-	glVertex3f(0.705f, 0.75f, -0.45f);
-	glVertex3f(0.705f, 0.995f, -0.45f);
-	glVertex3f(0.7f, 0.995f, -0.45f);
-	glVertex3f(0.7f, 0.995f, -0.45f);
-	glVertex3f(0.7f, 1.0f, -0.45f);
-	glVertex3f(0.995f, 1.0f, -0.45f);
-	glVertex3f(0.995f, 0.995f, -0.45f);	
-	glVertex3f(0.995f, 1.0f, -0.45f);
-	glVertex3f(1.0f, 1.0f, -0.45f);
-	glVertex3f(1.0f, 0.755f, -0.45f);
-	glVertex3f(0.995f, 0.755f, -0.45f);
-	glVertex3f(1.0f, 0.755f, -0.45f);
-	glVertex3f(1.0f, 0.75f, -0.45f);
-	glVertex3f(0.705f, 0.75f, -0.45f);
-	glVertex3f(0.705f, 0.755f, -0.45f);
+	glVertex3f(startX, botY, z);
+	glVertex3f(startX, topY, z);
+	glVertex3f(endX, topY, z);
+	glVertex3f(endX, botY, z);
 	glEnd();
 
 	glDisable(GL_BLEND);
@@ -439,23 +618,8 @@ void drawInfo() {
 		
 	ostringstream buffer;
 
-	buffer << timer.getRedrawsPerformedLastSecond() << " FPS";
-	renderBitmapString(0.75f, 0.95f, -0.5f, GLUT_BITMAP_HELVETICA_18, buffer.str());
-
-	//buffer.str("");
-	//buffer.clear();
- //   buffer << "Frame " << frameCount;
-	//renderBitmapString(0.75f, 0.9f, -0.5f, GLUT_BITMAP_HELVETICA_18, buffer.str());
-
-	buffer.str("");
-	buffer.clear();
-	buffer << "(" << MOUSE_X << ", " << MOUSE_Y << ")";
-	renderBitmapString(0.75f, 0.85f, -0.5f, GLUT_BITMAP_HELVETICA_18, buffer.str());
-
-	buffer.str("");
-	buffer.clear();
-	buffer << "Cheated?  " << theBoard->getCheated();
-	renderBitmapString(0.75f, 0.8f, -0.5f, GLUT_BITMAP_HELVETICA_18, buffer.str());
+	buffer << timer.getRedrawsPerformedLastSecond() << " fps";
+	Utility::renderBitmapString(textStartX, 0.93f, z2, GLUT_BITMAP_HELVETICA_18, buffer.str());
 }	
 
 void drawPlayerInfo() {
@@ -573,12 +737,12 @@ void drawMessages() {
 		currentMessage = messageList.at(i);
 		
 		glColor3f(currentMessage->getColor()->getR(), currentMessage->getColor()->getG(), currentMessage->getColor()->getB());
-		renderBitmapString(-0.9f, 0.88f - (i * 1.88f / (float)MESSAGE_LIST_SIZE), 0.0f, GLUT_BITMAP_HELVETICA_12, currentMessage->getMessage());
+		Utility::renderBitmapString(-0.9f, 0.88f - (i * 1.88f / (float)MESSAGE_LIST_SIZE), 0.0f, GLUT_BITMAP_HELVETICA_12, currentMessage->getMessage());
 	}
 }
 
 void createHelpMessageList() {
-	Message* msg = new Message("~~~~ bGame HELP ~~~~", new SColor(0.1f, 0.1f, 1.0f));
+	Message* msg = new Message("~~~~ " + GAME_NAME + " HELP ~~~~", new SColor(0.1f, 0.1f, 1.0f));
 	helpMessageList->addMessage(msg);
 
 	msg = new Message("   The object of the game is to defeat the four dragons.  They are the Blue, Red, Bronze, and Green Dragons.", new SColor(0.9f, 0.9f, 0.9f));
@@ -620,14 +784,51 @@ void createHelpMessageList() {
 	msg = new Message("~~~~ Other Info ~~~~", new SColor(0.02f, 0.97f, 0.81f));
 	helpMessageList->addMessage(msg);
 
-	msg = new Message("   bGame v1.1", new SColor(0.9f, 0.9f, 0.9f));
+	msg = new Message("   " + GAME_NAME + " v1.1", new SColor(0.9f, 0.9f, 0.9f));
 	helpMessageList->addMessage(msg);
-		
+
 	msg = new Message("   Created, Designed, and Programmed by Scott Atkins, 2006.  Updated in 2016.", new SColor(0.9f, 0.9f, 0.9f));
 	helpMessageList->addMessage(msg);
 
-	msg = new Message("   Thanks to Sam Liebo, Official Beta Tester (tm).", new SColor(0.9f, 0.9f, 0.9f));
+	msg = new Message("   Thanks to Sam Liebo, Official Beta Tester (tm),", new SColor(0.9f, 0.9f, 0.9f));
 	helpMessageList->addMessage(msg);
+
+	//CREATE HELP LIST TWO!
+	msg = new Message("~~~~ Game Information ~~~~", new SColor(0.32f, 0.4f, 0.81f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Health           - How much life your character has.  If this reaches zero, you die.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Attack           - Improves the chance that you successfully attack an enemy.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Damage           - Amount of damage you cause when you successfully attack an enemy.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Armor            - Reduces the chance that an enemy will successfully attack you.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Regeneration     - Amount of health gained at the end of each turn you take.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Damage Reduction - Amount of damage reduced from every successful enemy attack against you.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Light Aura       - How far away you can see on the map.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Waterwalk        - If you have waterwalk, you can move across water.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Dragons Slain    - Current counter of the number of dragons you have slain, out of four.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Actions          - The number of actions you have taken during this game.  The lower number of actions, the better!", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
+
+	msg = new Message("    Kills            - The number of monsters you have defeated.", new SColor(0.9f, 0.9f, 0.9f));
+	helpMessageListTwo->addMessage(msg);
 }
 
 void drawPlayerNameScreen() {
@@ -720,31 +921,36 @@ void drawPlayerNameScreen() {
 	glEnd();
 
 	glColor3f(0.9f, 0.9f, 0.9f);
-	renderBitmapString(-0.95f, 0.85f, -0.1f, GLUT_BITMAP_TIMES_ROMAN_24, "Welcome to Dragon Quest!");
+	Utility::renderBitmapString(-0.95f, 0.8f, -0.1f, GLUT_BITMAP_TIMES_ROMAN_24, "Welcome to " + GAME_NAME + "!");
 
 	glColor3f(0.8f, 0.8f, 0.8f);
-	renderBitmapString(-0.95f, 0.3f, -0.1f, GLUT_BITMAP_HELVETICA_18, "  Enter Your Name:");
+	Utility::renderBitmapString(-0.95f, 0.3f, -0.1f, GLUT_BITMAP_HELVETICA_18, "  Enter Your Name:");
 
 	glColor3f(0.6f, 0.6f, 0.75f);
-	renderBitmapString(-0.9f, 0.0f, -0.1f, GLUT_BITMAP_HELVETICA_18, (currentNameString + currentNameStringSuffix));
+	Utility::renderBitmapString(-0.9f, -0.025f, -0.1f, GLUT_BITMAP_HELVETICA_18, (currentNameString + currentNameStringSuffix));
 
 	glColor3f(0.8f, 0.8f, 0.8f);
-	renderBitmapString(-0.95f, -0.3f, -0.1f, GLUT_BITMAP_HELVETICA_18, "  Press ENTER when finished.  Leave blank for a random name.");
-
+	Utility::renderBitmapString(-0.95f, -0.3f, -0.1f, GLUT_BITMAP_HELVETICA_18, "  Press ENTER when finished.  Leave blank for a random name.");
 
 	glPopMatrix();
 }	
 
 void drawHelp() {
 	Message* currentMessage;
-	
-	vector<Message*> messageList = helpMessageList->getMessages();
+	vector<Message*> messageList;
+
+	if (DISPLAY_HELP == 1) {
+		messageList = helpMessageList->getMessages();
+	}
+	else {
+		messageList = helpMessageListTwo->getMessages();
+	}
 	
 	for (unsigned int i = 0; i < messageList.size(); i++) {
 		currentMessage = messageList.at(i);
 		
 		glColor3f(currentMessage->getColor()->getR(), currentMessage->getColor()->getG(), currentMessage->getColor()->getB());
-		renderBitmapString(-0.95f, 0.9f - (i * 0.08f) , 0.0f, GLUT_BITMAP_HELVETICA_12, currentMessage->getMessage());
+		Utility::renderBitmapString(-0.95f, 0.9f - (i * 0.08f) , 0.0f, GLUT_BITMAP_HELVETICA_12, currentMessage->getMessage());
 	}	
 }
 
@@ -784,11 +990,14 @@ void drawMap() {
 	glDisable(GL_LIGHT0);
 	glDisable(GL_COLOR_MATERIAL);
 
+	int minX = leftInset + squareInset;
+	int maxX = leftInset + squareInset + squareSize;
+
 	//draw hover information if mouse is hovering over a monster//dragon//theplayer
-	if (MOUSE_X > squareInset) {
+	if (MOUSE_X > minX && MOUSE_X < maxX) {
 		float ySquareSize = ((float)windowY / (float)BOARD_SIZE);
 		float xSquareSize = squareSize / (float)BOARD_SIZE;
-		int xPos = (int)(((float)MOUSE_X - squareInset) / xSquareSize);
+		int xPos = (int)(((float)MOUSE_X - squareInset - leftInset) / xSquareSize);
 		int yPos = (int)((float)MOUSE_Y / ySquareSize);
 
 		//if location mouse is over is visible, or fog is off, then draw monster info
@@ -823,22 +1032,72 @@ void reshapeDisplay(GLsizei W, GLsizei H) {
 	windowX = (float) W;
 	windowY = (float) H;
 
-	minSize = min(windowX, windowY);
-	squareSize = minSize;
-	squareInset = windowX - squareSize;
-	squareInsetHalf = squareInset / 2;
+	squareSize = min(windowX, windowY);
+	squareInset = squareSize / 3;
+	leftInset = (windowX - squareInset - squareSize) / 2;
 }
 
-void renderBitmapString(float x, float y, float z, void *font, string theString) {  
-	char line[200];
-	strcpy_s(line, theString.substr(0, 199).c_str());
-	
-	char *c;
-	glRasterPos3f(x, y, z);
+//set the color before calling this procedure;
+void drawMessageList(MessageList* messageList) {
+	Message* currentMessage;
 
-	for (c =line; *c != '\0'; c++) {
-	 glutBitmapCharacter(font, *c);
+	vector<Message*> messageVector = messageList->getMessages();
+
+	for (int i = 0; i < (int)messageVector.size(); i++) {
+		currentMessage = messageVector.at(i);
+
+		Utility::renderBitmapString(-0.9f, 0.7f - ((float)i * (1.75f / (float)messageVector.size())), 0.0f, GLUT_BITMAP_HELVETICA_12, currentMessage->getMessage());
 	}
+}
+
+void drawStandardBorder(SColor* outerColor, SColor* innerColor) {
+	glBegin(GL_QUADS);
+
+	//draw background
+	glColor3f(0.1f, 0.1f, 0.1f);
+	glVertex3f(-1.0f, -1.0f, 0.12f);
+	glVertex3f(-1.0f, 1.0f, 0.12f);
+	glVertex3f(1.0f, 1.0f, 0.12f);
+	glVertex3f(1.0f, -1.0f, 0.12f);
+
+	//draw outer border
+	glColor3f(outerColor->getR(), outerColor->getG(), outerColor->getB());
+	glVertex3f(-1.0f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, 0.98f, 0.1f);
+	glVertex3f(-1.0f, 0.98f, 0.1f);
+	glVertex3f(-1.0f, 0.98f, 0.1f);
+	glVertex3f(-1.0f, 1.0f, 0.1f);
+	glVertex3f(0.98f, 1.0f, 0.1f);
+	glVertex3f(0.98f, 0.98f, 0.1f);
+	glVertex3f(0.98f, 1.0f, 0.1f);
+	glVertex3f(1.0f, 1.0f, 0.1f);
+	glVertex3f(1.0f, -0.98f, 0.1f);
+	glVertex3f(0.98f, -0.98f, 0.1f);
+	glVertex3f(1.0f, -0.98f, 0.1f);
+	glVertex3f(1.0f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, -0.98f, 0.1f);
+
+	//draw inner border
+	glColor3f(innerColor->getR(), innerColor->getG(), innerColor->getB());
+	glVertex3f(-0.98f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, 0.97f, 0.1f);
+	glVertex3f(-0.98f, 0.97f, 0.1f);
+	glVertex3f(-0.98f, 0.97f, 0.1f);
+	glVertex3f(-0.98f, 0.98f, 0.1f);
+	glVertex3f(0.97f, 0.98f, 0.1f);
+	glVertex3f(0.97f, 0.97f, 0.1f);
+	glVertex3f(0.97f, 0.98f, 0.1f);
+	glVertex3f(0.98f, 0.98f, 0.1f);
+	glVertex3f(0.98f, -0.97f, 0.1f);
+	glVertex3f(0.97f, -0.97f, 0.1f);
+	glVertex3f(0.98f, -0.97f, 0.1f);
+	glVertex3f(0.98f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, -0.97f, 0.1f);
+	glEnd();
 }
 
 void initializeGame() {
@@ -855,5 +1114,9 @@ void initializeGame() {
 }
 
 int main(int argc, char** argv) {
+#ifdef NDEBUG
+	FreeConsole();
+#endif
+
 	initializeGlut(argc, argv);		
 }

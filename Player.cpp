@@ -1,13 +1,38 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #include "Player.h"
 
 Player::Player() {
 	name = RANDOM_NAMES[Utility::generateRandomInt(RANDOM_NAMES_SIZE - 1)];
 	initialize();
-}	
+}
 
 Player::Player(string newName) {
 	name = newName;
 	initialize();
+}
+
+//create a new player for populating the highscore list;  skill number refers to the number of dragons killed, and the level of equipment
+Player::Player(int dkills, int kills) {
+	name = RANDOM_NAMES[Utility::generateRandomInt(RANDOM_NAMES_SIZE - 1)];
+	initialize();
+
+	//generate level SKILL items for all slots
+	for (int i = 1; i <= 4; i++) {
+		items[i] = new Item(dkills + Utility::generateRandomInt(2), i);
+	}
+
+	dragonsSlain = dkills;
+	killCount = kills;
+	actions = killCount * 14 + Utility::generateRandomInt(50);
+
+	equipmentUpdate();
 }
 
 Player::~Player() {
@@ -46,7 +71,9 @@ void Player::initialize() {
 	attackingFrame = 0;
 	attackingDirection = 0;
 	newItemAvailable = false;
-		
+	cheated = false;
+	actions = 0;
+
 	rotationX = Utility::generateRandomFloat(2.0f) - 1.0f;
 	rotationY = Utility::generateRandomFloat(2.0f) - 1.0f;
 	rotationZ = Utility::generateRandomFloat(2.0f) - 1.0f;
@@ -54,16 +81,25 @@ void Player::initialize() {
 
 	healthColor = new SColor(0.15f, 0.15f, 0.15f);
 	color = new SColor(0.9f, 0.9f, 0.9f);
-		
+
+	int itemLevel = 0;
+
+	if (name == "tester50") {
+		itemLevel = 50;
+		cheated = true;
+	}
+	if (name == "tester7") {
+		itemLevel = 7;
+		cheated = true;
+	}
+
 	//generate level 0 items for all slots
 	for (int i = 1; i <= 4; i++) {
-		items[i] = new Item(0, i);
+		items[i] = new Item(itemLevel, i);
 	}
-		
-	equipmentUpdate();
 
-	//print();
-}	
+	equipmentUpdate();
+}
 
 void Player::equipmentUpdate() {
 	//updates the bonuses from all the items 
@@ -88,7 +124,7 @@ void Player::equipmentUpdate() {
 		ww += items[i]->getWWBonus();
 		dmg += items[i]->getDmgBonus();
 	}
-	
+
 	//do not allow hp to be greater than max!
 	if (currentHP > getMaxHP()) {
 		currentHP = getMaxHP();
@@ -96,6 +132,7 @@ void Player::equipmentUpdate() {
 }
 
 void Player::print() {
+	/*
 	cout << "~~~PLAYER SUMMARY~~~" << endl;
 	cout << "name: " << getNameAndTitle() << endl;
 	cout << "killcount=" << getKillCount() << endl;
@@ -110,10 +147,11 @@ void Player::print() {
 	cout << getDMG() << " Bonus Damage" << endl;
 
 	for (int i = 1; i <= 4; i++) {
-		cout << endl;
-		items[i]->print();
+	cout << endl;
+	items[i]->print();
 	}
-}	
+	*/
+}
 
 int Player::getCurrentHP() {
 	return currentHP;
@@ -131,9 +169,13 @@ int Player::getAR() {
 	return ar;
 }
 
+void Player::setCheated() {
+	cheated = true;
+}
+
 int Player::getREG() {
 	return baseREG + reg;
-}	
+}
 
 int Player::getDR() {
 	return dr;
@@ -169,6 +211,10 @@ int Player::getScore() {
 
 //return name with title.  ex:  "Lord Scott"
 string Player::getNameAndTitle() {
+	if (cheated) {
+		return "Cheater " + getName();
+	}
+
 	int score = getScore();
 
 	if (score < 50) {
@@ -183,7 +229,7 @@ string Player::getNameAndTitle() {
 	else {
 		return PLAYER_TITLES[3] + " " + getName();
 	}
-}	
+}
 
 Item* Player::getMainhand() {
 	return items[MAINHAND];
@@ -228,7 +274,7 @@ void Player::drawPlayerInfo() {
 	glVertex3f(-HEALTH_X, HEALTH_Y_TOP - diff, -0.1f);
 	glVertex3f(-HEALTH_X, HEALTH_Y_TOP, -diff);
 	glVertex3f(HEALTH_X - diff, HEALTH_Y_TOP, -0.1f);
-	glVertex3f(HEALTH_X, HEALTH_Y_TOP - diff, -0.1f);	
+	glVertex3f(HEALTH_X, HEALTH_Y_TOP - diff, -0.1f);
 	glVertex3f(HEALTH_X - diff, HEALTH_Y_TOP, -0.1f);
 	glVertex3f(HEALTH_X, HEALTH_Y_TOP, -0.1f);
 	glVertex3f(HEALTH_X, HEALTH_Y_BOTTOM + diff, -0.1f);
@@ -243,7 +289,7 @@ void Player::drawPlayerInfo() {
 	float xRange = (2 * HEALTH_X - 0.02f) * percent;
 
 	//health bar gets brighter red as it gets lower
-	glColor3f(1.0f - percent * 0.65f, 0.0f, 0.0f);	
+	glColor3f(1.0f - percent * 0.65f, 0.0f, 0.0f);
 	glVertex3f(-HEALTH_X + 0.01f, HEALTH_Y_BOTTOM + 0.01f, -0.1f);
 	glVertex3f(-HEALTH_X + 0.01f, HEALTH_Y_TOP - 0.01f, -0.1f);
 	glVertex3f(-HEALTH_X + 0.01f + xRange, HEALTH_Y_TOP - 0.01f, -0.1f);
@@ -261,10 +307,10 @@ void Player::drawPlayerInfo() {
 	//draw kill count and # of dragons slain
 	buffer.str("");
 	buffer.clear();
-	buffer << getDragonsSlain() << " / " << NUM_DRAGONS << " Dragons Slain        " << getKillCount() << " Kills";
+	buffer << getDragonsSlain() << " / " << NUM_DRAGONS << " Dragons Slain    " << getKillCount() << " Kills    " << getActions() << " Actions";
 	renderColor = new SColor(0.85f, 0.85f, 0.85f);
 	renderBitmapString(-0.95f, top - 4 * increment, -0.1f, GLUT_BITMAP_HELVETICA_12, buffer.str(), renderColor);
-		
+
 	//draw armor and attack bonus
 	buffer.str("");
 	buffer.clear();
@@ -306,7 +352,7 @@ void Player::drawPlayerInfo() {
 	delete renderColor;
 }
 
-void Player::renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor) { 
+void Player::renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor) {
 	//disable lighting if it was on
 	int lightingOn[1];
 
@@ -315,47 +361,37 @@ void Player::renderBitmapString(float x, float y, float z, void *font, string th
 	if (lightingOn[0] > 0) {
 		lightingOn[0] = 1;
 		glDisable(GL_LIGHTING);
-		//glDisable(GL_LIGHT0);
-		//glDisable(GL_COLOR_MATERIAL);		
 	}
-	
+
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
 	strcpy_s(line, theString.substr(0, 74).c_str());
-	
+
 	char *c;
 	glRasterPos3f(x, y, z);
 
-	for (c =line; *c != '\0'; c++) {
+	for (c = line; *c != '\0'; c++) {
 		glutBitmapCharacter(font, *c);
 	}
 
 	//turn lighting back on if it was on
 	if (lightingOn[0]) {
 		glEnable(GL_LIGHTING);
-		//glEnable(GL_COLOR_MATERIAL);
-		//glEnable(GL_LIGHT0);
 	}
 }
 
 void Player::changeHealthBy(int changeBy) {
 	currentHP += changeBy;
 
-	//JUST FOR TESTING
-	/*
 	if (currentHP < 0) {
-		cout << "setting max hp..   Player::changeHealthBy()" << endl;
-		currentHP = getMaxHP();
+		currentHP = 0;
 	}
-	*/
 }
 
 void Player::drawEquipment() {
 	int dimensions[4];
 	glGetIntegerv(GL_VIEWPORT, dimensions);
-
-	//cout << "Dimensions: " << dimensions[0] << " " << dimensions[1] << " " << dimensions[2] << " " << dimensions[3] << endl;
 
 	float height = (float)dimensions[3] / 4.0f;
 
@@ -390,23 +426,6 @@ void Player::draw(int drawOption) {
 	//draw attacked animation below the player piece, if under attack
 	if (attacked) {
 		//cout << "drawing attacked drawzz" << endl;
-		/*
-		int multiplier;
-
-		if (attackedFrame > (TURN_FRAME_LENGTH / 4)) {
-			multiplier = TURN_FRAME_LENGTH / 2 - attackedFrame;
-		}
-		else {
-			multiplier = attackedFrame;
-		}	
-
-		if (attackSuccessful) {
-			glColor3f(1.0f - 0.23f * (float)multiplier, 0.0f, 0.0f);
-		}
-		else {
-			glColor3f(1.0f - 0.23f * (float)multiplier, 1.0f - 0.23f * (float)multiplier, 1.0f - 0.23f * (float)multiplier);
-		}
-		*/
 
 		if (attackSuccessful) {
 			glColor3f(1.0f - (1.0f / (float)TURN_FRAME_LENGTH) * (float)attackedFrame, 0.0f, 0.0f);
@@ -433,21 +452,21 @@ void Player::draw(int drawOption) {
 	//draw attacking animation if the player is attacking
 	if (attacking) {
 		glPushMatrix();
-		
+
 		glColor3f(0.1f + (0.4f / (float)(TURN_FRAME_LENGTH / 2)) * (float)attackingFrame, 0.1f + (0.4f / (float)(TURN_FRAME_LENGTH / 2)) * (float)attackingFrame, 1.0f);
-			
+
 		if (attackingDirection == NORTH) {
-			
+
 			glRotatef(0.0f - (90.0f / (float)(TURN_FRAME_LENGTH / 2)) * attackingFrame, 0.0f, 0.0f, 1.0f);
 
-		} 
+		}
 		else if (attackingDirection == SOUTH) {
 			//rotate 180 degrees
 			glRotatef(180.0f - (90.0f / (float)(TURN_FRAME_LENGTH / 2)) * attackingFrame, 0.0f, 0.0f, 1.0f);
-		} 
+		}
 		else if (attackingDirection == EAST) {
 			glRotatef(270.0f - (90.0f / (float)(TURN_FRAME_LENGTH / 2)) * attackingFrame, 0.0f, 0.0f, 1.0f);
-		} 
+		}
 		else if (attackingDirection == WEST) {
 			glRotatef(90.0f - (90.0f / (float)(TURN_FRAME_LENGTH / 2)) * attackingFrame, 0.0f, 0.0f, 1.0f);
 		}
@@ -460,7 +479,7 @@ void Player::draw(int drawOption) {
 
 		glPopMatrix();
 	}
-	
+
 	glTranslatef(0.0f, 0.0f, -3.0f);
 
 	//translate based on moving and direction
@@ -501,7 +520,7 @@ void Player::draw(int drawOption) {
 		renderBitmapString(-0.98f, 0.98f, -0.1f, GLUT_BITMAP_HELVETICA_10, buffer.str(), healthColor);
 	}
 
-	//draw health bar if injured 
+    //draw health bar if injured
 	if (isInjured()) {
 		float x1 = -1.0f;
 		float y1 = 1.15f;
@@ -527,13 +546,6 @@ void Player::draw(int drawOption) {
 }
 
 void Player::frameUpdate(float deltaTime) {
-	//for testing
-	/*
-	if (getCurrentHP() <= 0) {
-		currentHP = getMaxHP();
-	}
-	*/
-
 	currentDegrees += degrees * deltaTime;
 	if (currentDegrees > 360.0f) {
 		currentDegrees -= 360.0f;
@@ -566,33 +578,7 @@ void Player::frameUpdate(float deltaTime) {
 			attackingFrame = 0;
 			attackingDirection = 0;
 		}
-	}	
-
-	/*
-	if (newItemAvailable) {
-		//update frame information while item is entering player view
-		if (newItemEntering) {
-			newItemFrameCount++;
-
-			if (newItemFrameCount >= (TURN_FRAME_LENGTH / 2)) {
-				newItemFrameCount = 0;
-				newItemEntering = false;
-			}
-		}
-
-		//update frame information while item is leaving
-		if (newItemLeaving) {
-			newItemFrameCount++;
-
-			if (newItemFrameCount >= (TURN_FRAME_LENGTH / 2)) {
-				newItemFrameCount = 0;
-				newItemLeaving = false;
-
-				newItemAvailable = false;
-			}	
-		}
 	}
-	*/
 }
 
 void Player::signalMoving(int direction) {
@@ -605,17 +591,17 @@ int Player::getRandomDmg() {
 }
 
 /*
-	Attack signaling works like this:  
+Attack signaling works like this:
 
-	When a monster attacks, it signals the player so the player knows enough to draw the attack animation.  
-	The attackedFrame is initialized to zero.
-	The attacked bool is set to TRUE since the player is being attacked.
-	IF the attack was successful, the attackSuccessful is set to TRUE.  
-	If multiple attacks occur against the player, only one needs to be successful for the attack animation to draw the successful animation.
+When a monster attacks, it signals the player so the player knows enough to draw the attack animation.
+The attackedFrame is initialized to zero.
+The attacked bool is set to TRUE since the player is being attacked.
+IF the attack was successful, the attackSuccessful is set to TRUE.
+If multiple attacks occur against the player, only one needs to be successful for the attack animation to draw the successful animation.
 */
 void Player::signalAttacked(bool success) {
 	attackedFrame = 0;
-	
+
 	attacked = true;
 
 	if (!attackSuccessful) {
@@ -627,7 +613,7 @@ void Player::signalAttacking(int direction) {
 	attacking = true;
 	attackingFrame = 0;
 	attackingDirection = direction;
-}	
+}
 
 void Player::incrementKillCount() {
 	killCount++;
@@ -653,8 +639,6 @@ SColor* Player::getColor() {
 void Player::signalNewItemAvailable(Item* theNewItem) {
 	newItem = theNewItem;
 	newItemAvailable = true;
-
-	//newItem->print();
 }
 
 //handle Yes/No Dialog boxes with this 
@@ -697,7 +681,7 @@ int Player::getAvgEquipLevel() {
 	if (temp <= 0) {
 		temp = 1;
 	}
-		
+
 	return temp;
 }
 
@@ -707,7 +691,7 @@ void Player::turnUpdate() {
 	if (isDead()) {
 		return;
 	}
-		
+
 	currentHP += getREG();
 
 	if (currentHP > getMaxHP()) {
@@ -717,4 +701,56 @@ void Player::turnUpdate() {
 
 void Player::setLight(int newLight) {
 	light = newLight;
+}
+
+MessageList* Player::createHighscoreList() {
+	MessageList* list = new MessageList();
+
+	ostringstream buffer;
+
+	list->addMessage(new Message(getNameAndTitle(), NULL));
+
+	buffer << getDragonsSlain() << " / " << NUM_DRAGONS << " Dragons Slain    " << getKillCount() << " Kills    " << getActions() << " Actions";
+	list->addMessage(new Message(buffer.str(), NULL));
+
+	buffer.str("");
+	buffer.clear();
+	buffer << getAC() << " Armor        +" << getAR() << " Attack";
+	list->addMessage(new Message(buffer.str(), NULL));
+
+	buffer.str("");
+	buffer.clear();
+	buffer << getMainhand()->getDmgMin() << " to " << getMainhand()->getDmgMax() << " + " << getDMG() << "  (" << getMainhand()->getAvgDmg() + getDMG() << " Avg Damage)";
+	list->addMessage(new Message(buffer.str(), NULL));
+
+	buffer.str("");
+	buffer.clear();
+	buffer << "+" << getREG() << " Regeneration        +" << getDR() << " Damage Reduction";
+	list->addMessage(new Message(buffer.str(), NULL));
+
+	buffer.str("");
+	buffer.clear();
+	buffer << "+" << getLIGHT() << " Light Aura";
+	list->addMessage(new Message(buffer.str(), NULL));
+
+	//don't include waterwalk stat on highscores
+
+	return list;
+}
+
+Item* Player::getItem(int type) {
+	//check to see if it is a valid item type
+	if ((type < 1) || (type > 4)) {
+		//cout << "INVALID ITEM TYPE!!!!!!" << endl;
+	}
+
+	return items[type];
+}
+
+int Player::getActions() {
+	return actions;
+}
+
+void Player::incrementActions() {
+	actions++;
 }

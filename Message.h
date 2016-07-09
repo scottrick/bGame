@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #ifndef MESSAGE
 #define MESSAGE
 
@@ -15,9 +23,12 @@ public:
 	SColor* getColor();
 
 	string getCharMessage();
+	void renderBitmapString(float x, float y, float z, void *font);
+
 private:
 	string msg;
 	SColor* color;
+	int dwDrawList;
 };
 
 #endif

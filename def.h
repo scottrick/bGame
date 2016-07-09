@@ -4,6 +4,8 @@
 #include <string>
 using namespace std;
 
+const string GAME_NAME = "Four Dragons";
+
 const int NUM_DRAGONS = 4; //number of dragons to slay to win
 
 const int DRAGON_LEVEL = 7; //the level of the dragons
@@ -94,6 +96,8 @@ const int DRAW_INFO = 1;
 
 const string RANDOM_NAMES[] = {"Raphael", "Rand", "Lothar", "Michael", "James", "Richard", "Alexi", "Brienne", "Heather", "Sarah", "Brigham", "Fred", "Ben", "Donatello", "Leonardo", "Splinter", "Catelyn", "Arya", "Jon", "Samwise"};
 const int RANDOM_NAMES_SIZE = 20;
+
+const string HIGHSCORE_FILENAME = "scores.bgame";
 
 const float MONSTER_SPIN_MIN = 12.0f;
 const float MONSTER_SPIN_MAX = 30.0f;

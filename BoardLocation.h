@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #ifndef BOARD_LOCATION
 #define BOARD_LOCATION
 
@@ -29,7 +37,7 @@ public:
 	bool getPassable();
 	void setPassable(bool newPassable);
 
-    bool getOccupied();
+	bool getOccupied();
 	void setOccupied(bool newOccupied);
 
 	void setEdge(bool newEdge);
@@ -68,13 +76,14 @@ private:
 
 	bool created;
 
+	void drawSlow();
 	void initialize();
-		
+
 	XVertex* midpoint; //random center point which gives the location a feel
 	XTriangle *one, *two, *three, *four; //four triangles that comprise the board location
 
-	int monsterNum;
-		
+	int monsterNum, dwDrawList;
+
 	SColor* color;
 
 	vector<Effect*> effects;

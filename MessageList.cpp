@@ -1,16 +1,22 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #include "MessageList.h"
 
 MessageList::MessageList() {
 	num = 10; //default list size
-}	
+}
 
 MessageList::MessageList(int newNum) {
 	num = newNum;
 }
 
 MessageList::~MessageList() {
-	//Message* current;
-	
 	for (unsigned int i = 0; i < theMessages.size(); i++) {
 		delete theMessages.at(i);
 	}
@@ -25,7 +31,7 @@ void MessageList::addMessage(Message *newMessage) {
 	//if the list is full, pop the front message until it is not full anymore
 
 	theMessages.push_back(newMessage);
-		
+
 	while ((int)theMessages.size() > num) {
 		delete theMessages.front();
 		theMessages.erase(theMessages.begin());
@@ -33,7 +39,7 @@ void MessageList::addMessage(Message *newMessage) {
 }
 
 void MessageList::print() {
-	
+
 }
 
 int MessageList::getSize() {

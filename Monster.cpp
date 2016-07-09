@@ -1,5 +1,7 @@
 #include "Monster.h"
 
+#include <iostream>
+
 Monster::Monster() { //randomly generate level 1 monster with random name
 	level = 1;
 	dragon = false;
@@ -103,13 +105,13 @@ void Monster::generate() { //generate monster based on given level
 
 	random = Utility::generateRandomInt(level);
 
-	currentHP = 10 * level + random;
+	currentHP = 10 * level + (2 * random);
 	maxHP = currentHP;
 
-	ac = 10 + 2 * level;
-	ar = 3 + 2 * level;
-	
-	avgdmg = 2 * level + 1;
+	ac = 8 + (2 * level);
+	ar = 3 + (2 * level);
+
+	avgdmg = (2 * level) + 1;
 	dmgvar = 1 + Utility::generateRandomInt(level);
 
 	//a level X monster has X "stat points"
@@ -139,7 +141,6 @@ void Monster::generate() { //generate monster based on given level
 				improvedDMG++;
 				break;
 			default:
-				cout << "Bad randon int.  Monster::generate()" << endl;
 				break;
 		}
 	}

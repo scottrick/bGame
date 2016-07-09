@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #include "BoardLocation.h"
 
 BoardLocation::BoardLocation() {
@@ -18,24 +26,25 @@ BoardLocation::BoardLocation(int newX, int newY, bool newPassable) {
 
 BoardLocation::~BoardLocation() {
 	//cout << "boardocation destructor" << endl;
-	//cout << "b 1 " << endl;
-	//cout << "b 2" << endl;
-	delete color;	
-
+	delete color;
 	delete one;
 	delete two;
 	delete three;
 	delete four;
 
-	//cout << "b 3" << endl;
 	for (unsigned int i = 0; i < effects.size(); i++) {
 		delete effects.at(i);
 	}
-	//cout << "b 4" << endl;
+
+	if (dwDrawList == -1)
+	{
+		glDeleteLists(dwDrawList, 1);
+	}
 }
-	
+
 void BoardLocation::initialize() {
 	monsterNum = -1;
+	dwDrawList = -1;
 	occupied = false;
 	created = false;
 
@@ -50,8 +59,6 @@ void BoardLocation::initialize() {
 void BoardLocation::initializeTerrain() {
 	float terrainMultiplier;
 
-	//cout << "TYPE " << type << endl;
-
 	if (type == MOUNTAINS) {
 		terrainMultiplier = 2.0f;
 	}
@@ -65,7 +72,7 @@ void BoardLocation::initializeTerrain() {
 		terrainMultiplier = 0.4f;
 	}
 	else {
-		cout << "BAD TERRAIN TYPE   BoardLocation::initializeTerrain()" << endl;
+		//cout << "BAD TERRAIN TYPE   BoardLocation::initializeTerrain()" << endl;
 	}
 
 	//terrainMultiplier is multiplied by the z Coordinate to give rockier feel to mountains, flatter to grass, etc
@@ -79,6 +86,14 @@ void BoardLocation::initializeTerrain() {
 	four = new XTriangle(new XVertex(1.0f, -1.0f, 0.1f), new XVertex(-1.0f, -1.0f, 0.1f), midpoint->duplicate());
 
 	delete midpoint;
+
+	if (dwDrawList == -1)
+	{ //create displaylist
+		dwDrawList = glGenLists(1);
+		glNewList(dwDrawList, GL_COMPILE);
+		drawSlow();
+		glEndList();
+	}
 }
 
 int BoardLocation::getType() {
@@ -91,7 +106,7 @@ void BoardLocation::setType(int newType) {
 
 BoardLocation* BoardLocation::getNorth() {
 	return north;
-}		
+}
 
 BoardLocation* BoardLocation::getSouth() {
 	return south;
@@ -123,7 +138,7 @@ BoardLocation* BoardLocation::getDirection(int direction) {
 	}
 
 	//bad direction
-	cout << "BoardLocation::getDirection(int direction) given BAD DIRECTION." << endl;
+	//cout << "BoardLocation::getDirection(int direction) given BAD DIRECTION." << endl;
 
 	return 0;
 }
@@ -153,7 +168,7 @@ void BoardLocation::setPassable(bool newPassable) {
 }
 
 void BoardLocation::print() {
-	cout << "location (" << x << ", " << y << ") with neighbors N=" << north << " S=" << south << " E=" << east << " W=" << west << endl;
+	//cout << "location (" << x << ", " << y << ") with neighbors N=" << north << " S=" << south << " E=" << east << " W=" << west << endl;
 }
 
 SColor* BoardLocation::getColor() {
@@ -177,10 +192,27 @@ void BoardLocation::setColor(SColor* newColor) {
 }
 
 void BoardLocation::draw() {
+
+	if (dwDrawList == -1)
+	{
+		drawSlow();
+	}
+	else
+	{
+		glCallList(dwDrawList);
+	}
+
+	//draw any effects on this location
+	for (unsigned int i = 0; i < effects.size(); i++) {
+		effects.at(i)->draw();
+	}
+}
+
+void BoardLocation::drawSlow()
+{
 	glColor3f(color->getR(), color->getG(), color->getB());
-	
 	glBegin(GL_TRIANGLES);
-		
+
 	//draw triangle one
 	glNormal3f(one->getNormal().getX(), one->getNormal().getY(), one->getNormal().getZ());
 	glVertex3f(one->getVertexOne()->getX(), one->getVertexOne()->getY(), one->getVertexOne()->getZ());
@@ -204,14 +236,9 @@ void BoardLocation::draw() {
 	glVertex3f(four->getVertexOne()->getX(), four->getVertexOne()->getY(), four->getVertexOne()->getZ());
 	glVertex3f(four->getVertexTwo()->getX(), four->getVertexTwo()->getY(), four->getVertexTwo()->getZ());
 	glVertex3f(four->getVertexThree()->getX(), four->getVertexThree()->getY(), four->getVertexThree()->getZ());
-	
-	glEnd();
 
-	//draw any effects on this location
-	for (unsigned int i = 0; i < effects.size(); i++) {
-		effects.at(i)->draw();
-	}
-}	
+	glEnd();
+}
 
 void BoardLocation::setEdge(bool newEdge) {
 	edge = newEdge;

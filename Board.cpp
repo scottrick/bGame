@@ -1,3 +1,11 @@
+//////////////////////////////////////
+//
+// bGame Project
+//
+// Scott Atkins, 2006
+//
+//////////////////////////////////////
+
 #include "Board.h"
 
 //create new board with random player name
@@ -26,8 +34,8 @@ Board::~Board() {
 		}
 	}
 
+	delete highscores;
 	delete thePlayer;
-
 	delete mountains;
 	delete lake;
 	delete grass;
@@ -38,7 +46,6 @@ Board::~Board() {
 	}
 
 	delete theMessageList;
-
 	delete playerTakeDamageColor;
 	delete monsterMissesColor;
 	delete playerHitMonsterColor;
@@ -48,20 +55,19 @@ Board::~Board() {
 }
 
 void Board::initialize() {
-	//testPlayer();
-	//testEffect2();
-	//testMonster();
-	//testItem();
-	//testBoardLocation();
+	loadHighscores();
 
+	tip = Utility::generateRandomInt(3);
 	gameOver = false;
 	playerWin = false;
+	newScore = false;
+	deadLight = 0;
 	//set base terrain colors
 
 	mountains = new SColor(0.5f, 0.23f, 0.1f);
 	grass = new SColor(0.29f, 0.44f, 0.14f); //old grass color
 	plains = new SColor(0.86f, 0.86f, 0.44f); //old plains color
-    lake = new SColor(0.0f, 0.28f, 0.98f); //old lake color
+	lake = new SColor(0.0f, 0.28f, 0.98f); //old lake color
 
 	playerTakeDamageColor = new SColor(0.96f, 0.11f, 0.10f);
 	monsterMissesColor = new SColor(0.18f, 0.12f, 0.99f);
@@ -69,56 +75,33 @@ void Board::initialize() {
 	playerMissMonsterColor = new SColor(0.7f, 0.9f, 0.5f);
 	playerKillsMonsterColor = new SColor(0.9f, 0.9f, 0.04f);
 	playerPassesColor = new SColor(0.95f, 0.95f, 0.95f);
-	
+
 	theMessageList = new MessageList(MESSAGE_LIST_SIZE);
 
-	initializeBoard();	
+	initializeBoard();
 
 	addWelcomeMessages();
 }
 
-void Board::testMonster() {
-	Monster* temp;
-	
-	//test generate 100 monsters
-	for (int i = 0; i < 1000000; i++) {
-		temp = new Monster(i % 6 + 1);
-		//temp->print();
-		delete temp;
-	} 
-}
-
-void Board::testItem() {
-	Item* temp;
-
-	for (int i = 0; i < 10000000; i++) {
-		temp = new Item(i % 7);
-		//temp->print();
-		delete temp;
-	}
-}
-
 void Board::addWelcomeMessages() {
-	Message* messageOne = new Message("  bGame!", new SColor(1.0f, 1.0f, 1.0f));
+	Message* messageOne = new Message(GAME_NAME + "!", new SColor(1.0f, 1.0f, 1.0f));
 	Message* messageTwo = new Message("Your quest is to slay the four dragons.", new SColor(1.0f, 1.0f, 1.0f));
-	Message* messageThree = new Message("Created by Scott Atkins, 2006", new SColor(0.1f, 0.1f, 0.85f));
+	Message* messageThree = new Message("Created by Scott Atkins, 2006", new SColor(0.2f, 0.2f, 0.75f));
 	Message* messageFour = new Message("", new SColor(1.0f, 1.0f, 1.0f));
 	Message* messageFive = new Message("Press 'H / h' for help.", new SColor(0.9f, 0.9f, 0.9f));
-	//Message* messageSix = new Message("", new SColor(1.0f, 1.0f, 1.0f));
 
 	theMessageList->addMessage(messageOne);
 	theMessageList->addMessage(messageThree);
 	theMessageList->addMessage(messageFour);
 	theMessageList->addMessage(messageTwo);
 	theMessageList->addMessage(messageFive);
-	//theMessageList->addMessage(messageSix);
 }
 
 void Board::initializeBoard() {
 	monsterCount = 0;
 	fog = true;
 	cheated = false;
-	
+
 	float random;
 
 	list<BoardLocation*> unfinished;
@@ -127,9 +110,9 @@ void Board::initializeBoard() {
 	for (int x = 0; x < BOARD_SIZE; x++) {
 		for (int y = 0; y < BOARD_SIZE; y++) {
 			locations[x][y] = new BoardLocation(x, y, true);
-			
+
 			//set all border locations color and impassability
-			if ((x == 0) || (y == 0) || (x == (BOARD_SIZE - 1)) || (y == (BOARD_SIZE - 1))) { 
+			if ((x == 0) || (y == 0) || (x == (BOARD_SIZE - 1)) || (y == (BOARD_SIZE - 1))) {
 				locations[x][y]->setPassable(false);
 				locations[x][y]->setColor(mountains->generateSimilarColor());
 				locations[x][y]->setEdge(true);
@@ -139,7 +122,7 @@ void Board::initializeBoard() {
 				locations[x][y]->setEdge(false);
 
 				random = Utility::generateRandomFloat(1.0f);
-				
+
 				if (random <= GRASS_CHANCE) { //this square is seeded grass
 					locations[x][y]->setColor(grass->generateSimilarColor());
 					locations[x][y]->setPassable(true);
@@ -206,7 +189,7 @@ void Board::initializeBoard() {
 		unfinished.pop_front();
 
 		random = Utility::generateRandomFloat(1.0f);
-		
+
 		if (random <= 0.15f) { //location inherits attributes of north location
 			if ((current->getNorth()->getCreated()) && (!current->getNorth()->getEdge())) {
 				current->setColor(current->getNorth()->getColor()->generateSimilarColor());
@@ -265,11 +248,11 @@ void Board::initializeBoard() {
 
 	Monster* newMonster;
 	int monsterNum = 0;
-	
+
 	//place four dragons
-	
+
 	//dragon ONE int bottom left quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Green Dragon", true, new SColor(0.1f, 0.85f, 0.1f));
+	newMonster = new Monster(DRAGON_LEVEL, "Green Dragon", true, new SColor(0.1f, 0.9f, 0.1f));
 	int xx = 0;
 	int yy = 0;
 	int quarter = BOARD_SIZE / 4;
@@ -289,8 +272,8 @@ void Board::initializeBoard() {
 	monsterCount++;
 
 	//dragon TWO in bottom right quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Bronze Dragon", true, new SColor(0.8f, 0.5f, 0.2f));
-	
+	newMonster = new Monster(DRAGON_LEVEL, "Bronze Dragon", true, new SColor(0.85f, 0.7f, 0.35f));
+
 	xx = 0;
 	yy = 0;
 
@@ -309,11 +292,11 @@ void Board::initializeBoard() {
 	monsterCount++;
 
 	//dragon THREE int top left quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Blue Dragon", true, new SColor(0.1f, 0.1f, 0.85f));
-	
+	newMonster = new Monster(DRAGON_LEVEL, "Blue Dragon", true, new SColor(0.1f, 0.1f, 0.9f));
+
 	xx = 0;
 	yy = 0;
-	
+
 	while (!(locations[xx][yy]->getPassable())) {
 		xx = (int)((0.25f) * (float)BOARD_SIZE) + (Utility::generateRandomInt((quarter * 2) - 1) - quarter);
 		yy = (int)((0.25f) * (float)BOARD_SIZE) + (Utility::generateRandomInt((quarter * 2) - 1) - quarter);
@@ -329,11 +312,11 @@ void Board::initializeBoard() {
 	monsterCount++;
 
 	//dragon FOUR int top right quadrant
-	newMonster = new Monster(DRAGON_LEVEL, "Black Dragon", true, new SColor(0.15f, 0.15f, 0.15f));
-	
+	newMonster = new Monster(DRAGON_LEVEL, "Black Dragon", true, new SColor(0.2f, 0.2f, 0.2f));
+
 	xx = 0;
 	yy = 0;
-	
+
 	while (!(locations[xx][yy]->getPassable())) {
 		xx = (int)((0.75f) * (float)BOARD_SIZE) + (Utility::generateRandomInt((quarter * 2) - 1) - quarter);
 		yy = (int)((0.25f) * (float)BOARD_SIZE) + (Utility::generateRandomInt((quarter * 2) - 1) - quarter);
@@ -354,14 +337,14 @@ void Board::initializeBoard() {
 			//if location is passable, chance monster will be drawn here
 			if ((locations[x][y]->getPassable()) && (locations[x][y]->getMonsterNum() < 0)) {
 				if (Utility::generateRandomFloat(1.0f) <= MONSTER_CHANCE) {
-					
+
 					//initially all monsters are level 1
 					newMonster = new Monster(1);
 
 					//newMonster = createAppropriateMonster();
 					newMonster->setLocation(locations[x][y]);
 					monsters.push_back(newMonster);
-					
+
 					//set monsterNum
 					locations[x][y]->setMonsterNum(monsterNum);
 
@@ -373,11 +356,11 @@ void Board::initializeBoard() {
 
 					//increase monster count
 					monsterCount++;
-				}	
+				}
 			}
 		}
 	}
-	
+
 	//place the player at a location not already occupied
 	while (thePlayer->getLocation() == NULL) {
 		xx = Utility::generateRandomInt(BOARD_SIZE - 1);
@@ -396,13 +379,7 @@ void Board::draw(int drawOption) {
 	float xStart = -1.0f + halfSquareSize;
 	float yStart = 1.0f - halfSquareSize;
 
-	//GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-    //GLfloat mat_shininess[] = { 15.0 };
-    //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-    //glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
-	
-	
-	float lightingValue; 
+	float lightingValue;
 	float lightValues[4];
 
 	//draw the monsters
@@ -431,7 +408,7 @@ void Board::draw(int drawOption) {
 				glLightfv(GL_LIGHT0, GL_SPECULAR, lightValues);
 				glTranslatef(xStart + (thisMonster->getLocation()->getX() * squareSize), yStart - thisMonster->getLocation()->getY() * squareSize, 0);
 				glScalef(halfSquareSize, halfSquareSize, halfSquareSize);
-				
+
 				monsters[i]->draw(drawOption);
 			}
 		}
@@ -440,10 +417,10 @@ void Board::draw(int drawOption) {
 	//draw the board squares
 	for (int y = 0; y < BOARD_SIZE; y++) {
 		for (int x = 0; x < BOARD_SIZE; x++) {
-			
+
 			//only draw locations if they are within light distance, or they are cheating!
 			if ((!fog) || ((lightingValue = calculateVisionLighting(x, y)) > 0.0f)) {
-				
+
 				if (!fog) {
 					lightingValue = 1.0f;
 				}
@@ -452,7 +429,7 @@ void Board::draw(int drawOption) {
 				lightValues[1] = lightingValue;
 				lightValues[2] = lightingValue;
 				lightValues[3] = lightingValue;
-				
+
 				glLoadIdentity();
 				glLightfv(GL_LIGHT0, GL_DIFFUSE, lightValues);
 				glLightfv(GL_LIGHT0, GL_SPECULAR, lightValues);
@@ -469,7 +446,6 @@ void Board::draw(int drawOption) {
 	lightValues[3] = 1.0f;
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightValues);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, lightValues);
-				
 
 	//draw the player
 	glLoadIdentity();
@@ -481,16 +457,14 @@ void Board::draw(int drawOption) {
 
 	//draw gameover screen if game is over
 	if (gameOver) {
-		drawGameOver();		
+		drawGameOver();
 		return;
 	}
 
 	if (thePlayer->getNewItemAvailable()) {
 		glPushMatrix();
-		//glScalef(1.0f, 1.0f, 0.05f);
 		glScalef(0.5f, 0.15f, 0.05f);
 		glTranslatef(0.0f, (0.5f - PLAYER_INFO_SIZE), -6.0f);
-		//glScalef(2.0f, 1.0f, 1.0f);
 		thePlayer->getNewItem()->drawNewItem();
 		glPopMatrix();
 	}
@@ -498,23 +472,23 @@ void Board::draw(int drawOption) {
 
 void Board::drawGameOver() {
 	glPushMatrix();
-	
+
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
-	glScalef(0.8f, 0.5f, 0.05f);
+	glScalef(0.7f, 0.45f, 0.05f);
 	glTranslatef(0.0f, 0.0f, -10.0f);
-	
+
 	//draw background
 	glBegin(GL_QUADS);
-	glColor4f(0.1f, 0.1f, 0.1f, 0.85f);
+	glColor4f(0.1f, 0.1f, 0.1f, 0.8f);
 	glVertex3f(-1.0f, -1.0f, 0.12f);
 	glVertex3f(-1.0f, 1.0f, 0.12f);
 	glVertex3f(1.0f, 1.0f, 0.12f);
 	glVertex3f(1.0f, -1.0f, 0.12f);
-		
+
 	//draw outer border
-	glColor3f(0.8f, 0.4f, 0.11f);      
+	glColor3f(0.8f, 0.4f, 0.11f);
 	glVertex3f(-1.0f, -1.0f, 0.1f);
 	glVertex3f(-0.98f, -1.0f, 0.1f);
 	glVertex3f(-0.98f, 0.98f, 0.1f);
@@ -522,7 +496,7 @@ void Board::drawGameOver() {
 	glVertex3f(-1.0f, 0.98f, 0.1f);
 	glVertex3f(-1.0f, 1.0f, 0.1f);
 	glVertex3f(0.98f, 1.0f, 0.1f);
-	glVertex3f(0.98f, 0.98f, 0.1f);	
+	glVertex3f(0.98f, 0.98f, 0.1f);
 	glVertex3f(0.98f, 1.0f, 0.1f);
 	glVertex3f(1.0f, 1.0f, 0.1f);
 	glVertex3f(1.0f, -0.98f, 0.1f);
@@ -541,7 +515,7 @@ void Board::drawGameOver() {
 	glVertex3f(-0.98f, 0.97f, 0.1f);
 	glVertex3f(-0.98f, 0.98f, 0.1f);
 	glVertex3f(0.97f, 0.98f, 0.1f);
-	glVertex3f(0.97f, 0.97f, 0.1f);	
+	glVertex3f(0.97f, 0.97f, 0.1f);
 	glVertex3f(0.97f, 0.98f, 0.1f);
 	glVertex3f(0.98f, 0.98f, 0.1f);
 	glVertex3f(0.98f, -0.97f, 0.1f);
@@ -549,7 +523,7 @@ void Board::drawGameOver() {
 	glVertex3f(0.98f, -0.97f, 0.1f);
 	glVertex3f(0.98f, -0.98f, 0.1f);
 	glVertex3f(-0.97f, -0.98f, 0.1f);
-	glVertex3f(-0.97f, -0.97f, 0.1f);		
+	glVertex3f(-0.97f, -0.97f, 0.1f);
 	glEnd();
 
 	glDisable(GL_BLEND);
@@ -557,7 +531,7 @@ void Board::drawGameOver() {
 	SColor* temp;
 
 	temp = new SColor(0.9f, 0.9f, 0.9f);
-	
+
 	string endMessage;
 
 	if (playerWin) {
@@ -569,13 +543,85 @@ void Board::drawGameOver() {
 
 	renderBitmapString(-0.95f, 0.85f, -0.1f, GLUT_BITMAP_TIMES_ROMAN_24, endMessage, temp);
 
-	endMessage = "You have not made it into the highscores.";
+	if (newScore) {
+		endMessage = "You have made it into the highscores!";
+	}
+	else {
+		endMessage = "You have not made it into the highscores.";
+	}
 
-	renderBitmapString(-0.95f, 0.3f, -0.1f, GLUT_BITMAP_HELVETICA_18, endMessage, temp);
+	renderBitmapString(-0.95f, 0.65f, -0.1f, GLUT_BITMAP_HELVETICA_18, endMessage, temp);
+
+	//draw tip if they didn't win
+	if (!playerWin) {
+		switch (tip) {
+		case 0:
+			renderBitmapString(-0.95f, -0.5f, -0.1f, GLUT_BITMAP_HELVETICA_18, "Tip: If you are having trouble hitting monsters,", temp);
+			renderBitmapString(-0.95f, -0.6f, -0.1f, GLUT_BITMAP_HELVETICA_18, "         try collecting items with + Attack.", temp);
+			break;
+		case 1:
+			renderBitmapString(-0.95f, -0.5f, -0.1f, GLUT_BITMAP_HELVETICA_18, "Tip: You can escape from a monster by walking", temp);
+			renderBitmapString(-0.95f, -0.6f, -0.1f, GLUT_BITMAP_HELVETICA_18, "         on water with the waterwalk ability.", temp);
+			break;
+		case 2:
+			renderBitmapString(-0.95f, -0.5f, -0.1f, GLUT_BITMAP_HELVETICA_18, "Tip: Increasing your armor makes it more,", temp);
+			renderBitmapString(-0.95f, -0.6f, -0.1f, GLUT_BITMAP_HELVETICA_18, "         difficult for monsters to hit you.", temp);
+			break;
+		case 3:
+			renderBitmapString(-0.95f, -0.5f, -0.1f, GLUT_BITMAP_HELVETICA_18, "Tip: The number by the monster's name represents", temp);
+			renderBitmapString(-0.95f, -0.6f, -0.1f, GLUT_BITMAP_HELVETICA_18, "         the difficulty of the monster.", temp);
+			break;
+		default:
+			break;
+		}
+	}
+
+	renderBitmapString(-0.95f, -0.8f, -0.1f, GLUT_BITMAP_HELVETICA_18, "Do you wish to play again?  (Y / N)", temp);
 
 	//draw player score info in the middle
+	glScalef(0.75, 0.44f, 1.0f);
+	glTranslatef(0.0f, 0.15f, 0.0f);
+	thePlayer->drawPlayerInfo();
 
-    renderBitmapString(-0.95f, -0.3f, -0.1f, GLUT_BITMAP_HELVETICA_18, "Do you wish to play again?  (Y / N)" , temp);
+	//draw outer border
+	glBegin(GL_QUADS);
+	glColor3f(0.8f, 0.4f, 0.11f);
+	glVertex3f(-1.0f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, 0.98f, 0.1f);
+	glVertex3f(-1.0f, 0.98f, 0.1f);
+	glVertex3f(-1.0f, 0.98f, 0.1f);
+	glVertex3f(-1.0f, 1.0f, 0.1f);
+	glVertex3f(0.98f, 1.0f, 0.1f);
+	glVertex3f(0.98f, 0.98f, 0.1f);
+	glVertex3f(0.98f, 1.0f, 0.1f);
+	glVertex3f(1.0f, 1.0f, 0.1f);
+	glVertex3f(1.0f, -0.98f, 0.1f);
+	glVertex3f(0.98f, -0.98f, 0.1f);
+	glVertex3f(1.0f, -0.98f, 0.1f);
+	glVertex3f(1.0f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, -1.0f, 0.1f);
+	glVertex3f(-0.98f, -0.98f, 0.1f);
+
+	//draw inner border
+	glColor3f(0.91f, 0.44f, 0.13f);
+	glVertex3f(-0.98f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, 0.97f, 0.1f);
+	glVertex3f(-0.98f, 0.97f, 0.1f);
+	glVertex3f(-0.98f, 0.97f, 0.1f);
+	glVertex3f(-0.98f, 0.98f, 0.1f);
+	glVertex3f(0.97f, 0.98f, 0.1f);
+	glVertex3f(0.97f, 0.97f, 0.1f);
+	glVertex3f(0.97f, 0.98f, 0.1f);
+	glVertex3f(0.98f, 0.98f, 0.1f);
+	glVertex3f(0.98f, -0.97f, 0.1f);
+	glVertex3f(0.97f, -0.97f, 0.1f);
+	glVertex3f(0.98f, -0.97f, 0.1f);
+	glVertex3f(0.98f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, -0.98f, 0.1f);
+	glVertex3f(-0.97f, -0.97f, 0.1f);
+	glEnd();
 
 	delete temp;
 
@@ -586,32 +632,17 @@ MessageList* Board::getMessageList() {
 	return theMessageList;
 }
 
-void Board::testBoardLocation() {
-	BoardLocation* temp;
-	
-	for (int i = 0; i < 9999999; i++) {
-		//cout << "test board location" << endl;
-		temp = new BoardLocation(4, 1, false);
-		temp->addEffect(new Effect(MONSTER_DEATH, 3, new SColor(1, 1, 1)));
-		delete temp;
-	}
-}
-
-void Board::testPlayer() {
-	
-	for (int i = 0; i < 100000; i++) {
-		delete thePlayer;
-		thePlayer = new Player();
-	}
-}
-
 Player* Board::getPlayer() {
 	return thePlayer;
 }
 
 void Board::frameUpdate(float deltaTime) {
-	if (getGameOver() && (thePlayer->getLIGHT() < (BOARD_SIZE * 2))) {
-		thePlayer->setLight(thePlayer->getLIGHT() + 1);
+	if (getGameOver() && ((thePlayer->getLIGHT() + deadLight) < (BOARD_SIZE * 2))) {
+		//thePlayer->setLight(thePlayer->getLIGHT() + 1);
+		deadLight++;
+		deadLight++;
+		deadLight++;
+		deadLight++;
 	}
 
 	//randomly kill off monsters until they are all dead
@@ -637,7 +668,7 @@ void Board::frameUpdate(float deltaTime) {
 			locations[x][y]->frameUpdate(deltaTime);
 		}
 	}
-}	
+}
 
 void Board::drawMonsterInfo(int x, int y) {
 	if (locations[x][y]->getMonsterNum() >= 0) { //if monsterNum is >= 0, then there is a monster
@@ -655,7 +686,7 @@ void Board::updateMonsters() {
 	//cout << "monsters size = " << monsters.size() << endl;
 	//cout << "Dragons size = " << dragons.size() << endl;
 
-	for (unsigned int i = 0; i < monsters.size(); i++) {		
+	for (unsigned int i = 0; i < monsters.size(); i++) {
 		updateMonster(monsters.at(i));
 		monsters.at(i)->turnUpdate();
 	}
@@ -666,7 +697,6 @@ void Board::updateMonster(Monster *thisMonster) {
 	if (thisMonster->getDead()) {
 		return;
 	}
-	//cout << "Updating " << thisMonster->getName() << endl;
 
 	//FIRST, if monster can attack teh player, it does so
 	if (int direction = checkIfPlayerNextToMonster(thisMonster)) {
@@ -679,7 +709,7 @@ void Board::updateMonster(Monster *thisMonster) {
 	//SECOND, if monster can move towards a player, it does so
 	if (int direction = checkIfPlayerNearToMonster(thisMonster)) {
 		//cout << "    Player is *near* " << direction << " of the monster ^" << endl;
-		
+
 		moveMonster(thisMonster, direction);
 		return;
 	}
@@ -698,7 +728,7 @@ void Board::moveMonster(Monster* thisMonster, int direction) {
 
 	//signal the monster is moving
 	thisMonster->signalMoving(direction);
-	
+
 	//set the monster to the new location, and remove it from its old
 	BoardLocation* currentLocation = thisMonster->getLocation();
 	int monsterNum = currentLocation->getMonsterNum();
@@ -709,9 +739,9 @@ void Board::moveMonster(Monster* thisMonster, int direction) {
 
 	//add monster info to new location
 	thisMonster->setLocation(currentLocation->getDirection(direction));
-	thisMonster->getLocation()->setOccupied(true);	
+	thisMonster->getLocation()->setOccupied(true);
 	thisMonster->getLocation()->setMonsterNum(monsterNum);
-}	
+}
 
 //returns a random direction to move;  if ZERO is returned, then no move is possible
 int Board::findRandomMonsterMove(Monster* thisMonster) {
@@ -742,14 +772,14 @@ int Board::findRandomMonsterMove(Monster* thisMonster) {
 	//if no moves are available
 	if (openLocations.size() == 0) {
 		return 0;
-	}	
+	}
 	else return openLocations.at(Utility::generateRandomInt((int)openLocations.size() - 1));
 }
 
 int Board::checkIfPlayerNextToMonster(Monster *thisMonster) {
 	int playerX = thePlayer->getLocation()->getX();
 	int playerY = thePlayer->getLocation()->getY();
-	
+
 	if (thePlayer->getLocation()->getX() == thisMonster->getLocation()->getX()) {
 		if ((thePlayer->getLocation()->getY() - thisMonster->getLocation()->getY()) == 1) {
 			//player is SOUTH of the monster
@@ -807,8 +837,8 @@ int Board::checkIfPlayerNearToMonster(Monster* thisMonster) {
 			if (thisMonster->getLocation()->getEast()->getAvailable()) {
 				return EAST;
 			}
-		}	
-	
+		}
+
 		//location SEVEN
 		if (monsterX - 2 == playerX) {
 			if (thisMonster->getLocation()->getWest()->getAvailable()) {
@@ -830,7 +860,7 @@ int Board::checkIfPlayerNearToMonster(Monster* thisMonster) {
 					return SOUTH;
 				}
 				else {
-					cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
+					//cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
 				}
 			}
 
@@ -855,7 +885,7 @@ int Board::checkIfPlayerNearToMonster(Monster* thisMonster) {
 					return NORTH;
 				}
 				else {
-					cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
+					//cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
 				}
 			}
 
@@ -883,7 +913,7 @@ int Board::checkIfPlayerNearToMonster(Monster* thisMonster) {
 					return SOUTH;
 				}
 				else {
-					cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
+					//cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
 				}
 			}
 
@@ -908,7 +938,7 @@ int Board::checkIfPlayerNearToMonster(Monster* thisMonster) {
 					return NORTH;
 				}
 				else {
-					cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
+					//cout << "Bad Random Value - Board::checkIfPlayerNearToMonster" << endl;
 				}
 			}
 
@@ -921,10 +951,10 @@ int Board::checkIfPlayerNearToMonster(Monster* thisMonster) {
 			}
 		}
 	}
-	
+
 	//otherwise, player is not near to the monster
 	return 0;
-}	
+}
 
 void Board::monsterAttack(Monster* thisMonster, int direction) {
 	//cout << "    " << thisMonster->getName() << " is attacking " << direction << "." << endl;
@@ -933,10 +963,10 @@ void Board::monsterAttack(Monster* thisMonster, int direction) {
 	thisMonster->signalAttacking(direction);
 
 	//generate monster attack roll: 1 - 20
-	int monsterRoll = Utility::generateRandomInt(19) + 1; 	
+	int monsterRoll = Utility::generateRandomInt(19) + 1;
 
 	//cout << "monsterRoll = " << monsterRoll << endl;
-	
+
 	int modifiedRoll = monsterRoll + thisMonster->getAR();
 
 	//cout << "modifiedRoll = " << modifiedRoll << endl;
@@ -946,7 +976,7 @@ void Board::monsterAttack(Monster* thisMonster, int direction) {
 		//cout << "Monster Hits" << endl;
 
 		int damage = thisMonster->getRandomDmg();
-		
+
 		damage = damage - thePlayer->getDR();
 
 		//minimum damage caused on a successful hit is 1
@@ -968,9 +998,14 @@ void Board::monsterAttack(Monster* thisMonster, int direction) {
 		if (thePlayer->isDead()) {
 			//add player dead effect
 			thePlayer->getLocation()->addEffect(new Effect(MONSTER_DEATH, 42, thePlayer->getColor()->generateSameColor()));
-			
-			gameOver = true;			
-		}	
+
+			Highscore* newHighscore = new Highscore(thePlayer);
+
+			newScore = highscores->compare(newHighscore);
+			//cout << "newscore? " << newScore << endl;
+
+			gameOver = true;
+		}
 		else {
 			//add player hit effect
 			thePlayer->getLocation()->addEffect(new Effect(MONSTER_DEATH, 0, thePlayer->getColor()->generateSameColor()));
@@ -1052,7 +1087,12 @@ void Board::playerAttack(int direction) {
 				//check if player has won!
 				if (thePlayer->getDragonsSlain() >= 4) {
 					gameOver = true;
-					playerWin = true;					
+					playerWin = true;
+
+					Highscore* newHighscore = new Highscore(thePlayer);
+
+					newScore = highscores->compare(newHighscore);
+					//cout << "newscore? " << newScore << endl;
 				}
 			}
 			else {
@@ -1080,7 +1120,8 @@ void Board::playerAttack(int direction) {
 		else { //target is not dead, but still add a small dmg effect
 			target->getLocation()->addEffect(new Effect(MONSTER_DEATH, 0, target->getColor()->generateSameColor()));
 		}
-	}	else {
+	}
+	else {
 		//cout << "Player MISS" << endl;
 
 		target->signalAttacked(false);
@@ -1103,7 +1144,7 @@ bool Board::movePlayer(int direction) {
 	}
 
 	bool moved = false;
-	
+
 	BoardLocation* currentLocation = thePlayer->getLocation();
 
 	if (direction == NORTH) {
@@ -1131,7 +1172,7 @@ bool Board::movePlayer(int direction) {
 
 			moved = true;
 		}
-		else if (((currentLocation->getSouth()->getPassable()) && (!(currentLocation->getSouth()->getOccupied()))) || ((currentLocation->getSouth()->getType() == LAKE) && (thePlayer->getWW() > 0))){
+		else if (((currentLocation->getSouth()->getPassable()) && (!(currentLocation->getSouth()->getOccupied()))) || ((currentLocation->getSouth()->getType() == LAKE) && (thePlayer->getWW() > 0))) {
 			thePlayer->setLocation(currentLocation->getSouth());
 			thePlayer->signalMoving(SOUTH);
 
@@ -1178,6 +1219,11 @@ bool Board::movePlayer(int direction) {
 		}
 	}
 
+	//if move successful, increase action count
+	if (moved) {
+		thePlayer->incrementActions();
+	}
+
 	return moved;
 }
 
@@ -1190,7 +1236,7 @@ void Board::drawInfoBorder() {
 	glVertex3f(1.0f, -1.0f, 0.0f);
 
 	//draw outer border
-	glColor3f(0.8f, 0.4f, 0.11f);      
+	glColor3f(0.8f, 0.4f, 0.11f);
 	glVertex3f(-1.0f, -1.0f, -0.1f);
 	glVertex3f(-0.98f, -1.0f, -0.1f);
 	glVertex3f(-0.98f, 0.98f, -0.1f);
@@ -1198,7 +1244,7 @@ void Board::drawInfoBorder() {
 	glVertex3f(-1.0f, 0.98f, -0.1f);
 	glVertex3f(-1.0f, 1.0f, -0.1f);
 	glVertex3f(0.98f, 1.0f, -0.1f);
-	glVertex3f(0.98f, 0.98f, -0.1f);	
+	glVertex3f(0.98f, 0.98f, -0.1f);
 	glVertex3f(0.98f, 1.0f, -0.1f);
 	glVertex3f(1.0f, 1.0f, -0.1f);
 	glVertex3f(1.0f, -0.98f, -0.1f);
@@ -1217,7 +1263,7 @@ void Board::drawInfoBorder() {
 	glVertex3f(-0.98f, 0.97f, -0.1f);
 	glVertex3f(-0.98f, 0.98f, -0.1f);
 	glVertex3f(0.97f, 0.98f, -0.1f);
-	glVertex3f(0.97f, 0.97f, -0.1f);	
+	glVertex3f(0.97f, 0.97f, -0.1f);
 	glVertex3f(0.97f, 0.98f, -0.1f);
 	glVertex3f(0.98f, 0.98f, -0.1f);
 	glVertex3f(0.98f, -0.97f, -0.1f);
@@ -1225,7 +1271,7 @@ void Board::drawInfoBorder() {
 	glVertex3f(0.98f, -0.97f, -0.1f);
 	glVertex3f(0.98f, -0.98f, -0.1f);
 	glVertex3f(-0.97f, -0.98f, -0.1f);
-	glVertex3f(-0.97f, -0.97f, -0.1f);	
+	glVertex3f(-0.97f, -0.97f, -0.1f);
 	glEnd();
 }
 
@@ -1233,33 +1279,10 @@ string Board::getRandomAttackVerb() {
 	return ATTACK_VERBS[Utility::generateRandomInt(ATTACK_VERBS_SIZE - 1)];
 }
 
-void Board::testEffect() {
-	//cout << "testEffect() Start" << endl;
-	int x = (Utility::generateRandomInt(BOARD_SIZE - 1));
-	int y = (Utility::generateRandomInt(BOARD_SIZE - 1));
-
-	locations[x][y]->addEffect(new Effect(MONSTER_DEATH, Utility::generateRandomInt(12) + 1, new SColor()));
-	//cout << "testEffect() END " << endl;
-}
-
-void Board::testLocations() {
-	for (int x = 0; x < BOARD_SIZE; x++) {
-		for (int y = 0; y < BOARD_SIZE; y++) {
-			cout << "size " << locations[x][y]->getEffectsSize() << endl;
-		}
-	}
-}
-
-void Board::testEffect2() {
-	Effect* temp;
-	for (int i = 0; i < 100000; i++) {
-		temp = new Effect(MONSTER_DEATH, 4, new SColor());
-		delete temp;
-	}
-}
-
 bool Board::playerPasses() {
 	theMessageList->addMessage(new Message("You rest for a moment.", playerPassesColor->generateSameColor()));
+
+	thePlayer->incrementActions();
 
 	return true;
 }
@@ -1268,7 +1291,7 @@ bool Board::playerPasses() {
 Monster* Board::createAppropriateMonster() {
 	//create a monster of the players average equipment level, or one level higher
 	int newLevel = thePlayer->getAvgEquipLevel() + Utility::generateRandomInt(1);
-	
+
 	//one is min monster level
 	if (newLevel < 1) {
 		newLevel = 1;
@@ -1294,17 +1317,17 @@ void Board::placeRandomMonster() {
 	bool goodNewLocation = false;
 	int tries = 0;
 
-	while(!goodNewLocation) {
+	while (!goodNewLocation) {
 		tries++;
 
 		x = Utility::generateRandomInt(BOARD_SIZE - 1);
 		y = Utility::generateRandomInt(BOARD_SIZE - 1);
-		
+
 		//first check to see if the location is even available
 		if (locations[x][y]->getAvailable()) {
-			
+
 			//then check if the location is a distance from the player
-			if((abs(playerX - x) + abs(playerY - y)) > 12) {
+			if ((abs(playerX - x) + abs(playerY - y)) > 12) {
 				goodNewLocation = true;
 			}
 		}
@@ -1319,7 +1342,7 @@ void Board::placeRandomMonster() {
 	//now that we have good location, assign new monster to this location
 	newMonster->setLocation(locations[x][y]);
 	monsters.push_back(newMonster);
-					
+
 	//set monsterNum
 	locations[x][y]->setMonsterNum((int)monsters.size() - 1);
 
@@ -1328,7 +1351,7 @@ void Board::placeRandomMonster() {
 
 	//increase monsterCount
 	monsterCount++;
-}	
+}
 
 //do turn board maintenance
 void Board::turnUpdate() {
@@ -1338,7 +1361,7 @@ void Board::turnUpdate() {
 	//add another monster if needed
 	if (monsterCount < (BOARD_SIZE - 3) * 2) {
 		//cout << "NEW MONSTER" << endl;
-		
+
 		//place new monster half the time if this condition is met
 		if (Utility::generateRandomInt(1) == 0) {
 			placeRandomMonster();
@@ -1350,6 +1373,7 @@ void Board::turnUpdate() {
 void Board::toggleFog() {
 	fog = !fog;
 	cheated = true;
+	thePlayer->setCheated();
 }
 
 float Board::calculateVisionLighting(int locationX, int locationY) {
@@ -1358,13 +1382,13 @@ float Board::calculateVisionLighting(int locationX, int locationY) {
 
 	//playerX becomes the distance from the location to the player
 	playerX = abs(playerX - locationX) + abs(playerY - locationY);
-	
+
 	//special case on the player
 	if (playerX == 0) {
 		return 1.0f;
 	}
 
-	if (playerX <= thePlayer->getLIGHT()) {
+	if (playerX <= (thePlayer->getLIGHT() + deadLight)) {
 		//don't let distance get greater than the light array lol
 		if (playerX > 20) {
 			playerX = 20;
@@ -1374,7 +1398,7 @@ float Board::calculateVisionLighting(int locationX, int locationY) {
 	}
 	else {
 		return 0.0f;
-	}	
+	}
 }
 
 bool Board::getFog() {
@@ -1389,7 +1413,7 @@ bool Board::getGameOver() {
 	return gameOver;
 }
 
-void Board::renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor) { 
+void Board::renderBitmapString(float x, float y, float z, void *font, string theString, SColor* theColor) {
 	//disable lighting if it was on
 	int lightingOn[1];
 
@@ -1401,16 +1425,16 @@ void Board::renderBitmapString(float x, float y, float z, void *font, string the
 		//glDisable(GL_LIGHT0);
 		//glDisable(GL_COLOR_MATERIAL);		
 	}
-	
+
 	glColor3f(theColor->getR(), theColor->getG(), theColor->getB());
 
 	char line[75];
 	strcpy_s(line, theString.substr(0, 74).c_str());
-	
+
 	char *c;
 	glRasterPos3f(x, y, z);
 
-	for (c =line; *c != '\0'; c++) {
+	for (c = line; *c != '\0'; c++) {
 		glutBitmapCharacter(font, *c);
 	}
 
@@ -1420,4 +1444,12 @@ void Board::renderBitmapString(float x, float y, float z, void *font, string the
 		//glEnable(GL_COLOR_MATERIAL);
 		//glEnable(GL_LIGHT0);
 	}
+}
+
+void Board::loadHighscores() {
+	highscores = new HighscoreList();
+}
+
+HighscoreList* Board::getHighscores() {
+	return highscores;
 }
