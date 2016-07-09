@@ -1286,8 +1286,11 @@ string Board::getRandomAttackVerb() {
 }
 
 bool Board::playerPasses() {
-	theMessageList->addMessage(new Message("You rest for a moment.", playerPassesColor->generateSameColor()));
+	if ((thePlayer->getNewItemAvailable()) || (thePlayer->isDead())) {
+		return false;
+	}
 
+	theMessageList->addMessage(new Message("You rest for a moment.", playerPassesColor->generateSameColor()));
 	thePlayer->incrementActions();
 
 	return true;
