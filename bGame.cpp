@@ -19,8 +19,8 @@
 using namespace std;
 
 //default window size;
-const int startingWindowX = 1000;
-const int startingWindowY = 600;
+const int startingWindowX = 1024;
+const int startingWindowY = 768;
 
 float windowX = startingWindowX;
 float windowY = startingWindowY;
@@ -159,7 +159,10 @@ void initializeGlut(int argc, char** argv) {
 	glutInitWindowPosition(800, 100);
 	glutInitWindowSize(startingWindowX, startingWindowY);	
 	glutCreateWindow(GAME_NAME.c_str());
-	//glutFullScreen();
+
+#ifdef NDEBUG
+	glutFullScreen();
+#endif
 
 	glEnable(GLUT_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);

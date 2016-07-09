@@ -1,4 +1,4 @@
-Dragon Quest 
+Four Dragons
 
 README
 
