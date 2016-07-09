@@ -73,6 +73,7 @@ public:
 	bool isDead();
 
 	void setCheated();
+	bool getCheater() { return cheated;  }
 
 	void setLight(int newLight);
 

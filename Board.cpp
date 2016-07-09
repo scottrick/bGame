@@ -62,12 +62,12 @@ void Board::initialize() {
 	playerWin = false;
 	newScore = false;
 	deadLight = 0;
-	//set base terrain colors
 
+	//set base terrain colors
 	mountains = new SColor(0.5f, 0.23f, 0.1f);
-	grass = new SColor(0.29f, 0.44f, 0.14f); //old grass color
-	plains = new SColor(0.86f, 0.86f, 0.44f); //old plains color
-	lake = new SColor(0.0f, 0.28f, 0.98f); //old lake color
+	grass = new SColor(0.29f, 0.44f, 0.14f);
+	plains = new SColor(0.08f, 0.35f, 0.04f);
+	lake = new SColor(0.05f, 0.15f, 0.75f);
 
 	playerTakeDamageColor = new SColor(0.96f, 0.11f, 0.10f);
 	monsterMissesColor = new SColor(0.18f, 0.12f, 0.99f);
@@ -381,11 +381,23 @@ void Board::draw(int drawOption) {
 
 	float lightingValue;
 	float lightValues[4];
+	float brightLight[4];
+
+	brightLight[0] = 1.0f;
+	brightLight[1] = 1.0f;
+	brightLight[2] = 1.0f;
+	brightLight[3] = 1.0f;
 
 	//draw the monsters
 	Monster* thisMonster;
 
 	glMatrixMode(GL_MODELVIEW);
+
+	lightValues[0] = 0.0f;
+	lightValues[1] = 0.0f;
+	lightValues[2] = 0.0f;
+	lightValues[3] = 1.0f;
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightValues);
 
 	for (unsigned int i = 0; i < monsters.size(); i++) {
 		thisMonster = monsters[i];
@@ -400,12 +412,12 @@ void Board::draw(int drawOption) {
 			lightValues[0] = lightingValue;
 			lightValues[1] = lightingValue;
 			lightValues[2] = lightingValue;
-			lightValues[3] = lightingValue;
+			lightValues[3] = 1.0f;
 
 			if (!thisMonster->getDead()) {
 				glLoadIdentity();
 				glLightfv(GL_LIGHT0, GL_DIFFUSE, lightValues);
-				glLightfv(GL_LIGHT0, GL_SPECULAR, lightValues);
+				glLightfv(GL_LIGHT0, GL_SPECULAR, brightLight);
 				glTranslatef(xStart + (thisMonster->getLocation()->getX() * squareSize), yStart - thisMonster->getLocation()->getY() * squareSize, 0);
 				glScalef(halfSquareSize, halfSquareSize, halfSquareSize);
 
@@ -428,11 +440,11 @@ void Board::draw(int drawOption) {
 				lightValues[0] = lightingValue;
 				lightValues[1] = lightingValue;
 				lightValues[2] = lightingValue;
-				lightValues[3] = lightingValue;
+				lightValues[3] = 1.0f;
 
 				glLoadIdentity();
 				glLightfv(GL_LIGHT0, GL_DIFFUSE, lightValues);
-				glLightfv(GL_LIGHT0, GL_SPECULAR, lightValues);
+				glLightfv(GL_LIGHT0, GL_SPECULAR, brightLight);
 				glTranslatef(xStart + (x * squareSize), (yStart - y * squareSize), 0);
 				glScalef(halfSquareSize, halfSquareSize, halfSquareSize);
 				locations[x][y]->draw();
@@ -440,12 +452,8 @@ void Board::draw(int drawOption) {
 		}
 	}
 
-	lightValues[0] = 1.0f;
-	lightValues[1] = 1.0f;
-	lightValues[2] = 1.0f;
-	lightValues[3] = 1.0f;
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightValues);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, lightValues);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, brightLight);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, brightLight);
 
 	//draw the player
 	glLoadIdentity();
@@ -646,11 +654,11 @@ void Board::frameUpdate(float deltaTime) {
 	}
 
 	//randomly kill off monsters until they are all dead
-	if (getGameOver() && (Utility::generateRandomFloat(1.0f) < 0.1f)) {
+	if (getGameOver() && (Utility::generateRandomFloat(1.0f) < 2.5f * deltaTime)) {
 		Monster* target = monsters.at(Utility::generateRandomInt((int)monsters.size() - 1));
 
 		if (!target->getDead()) {
-			target->getLocation()->addEffect(new Effect(MONSTER_DEATH, (target->getLevel() * Utility::generateRandomInt(5)), target->getColor()->generateSameColor()));
+			target->getLocation()->addEffect(new Effect(MONSTER_DEATH, target->getLevel() * 2, target->getColor()->generateSameColor()));
 			target->signalDead();
 		}
 	}
@@ -1000,9 +1008,7 @@ void Board::monsterAttack(Monster* thisMonster, int direction) {
 			thePlayer->getLocation()->addEffect(new Effect(MONSTER_DEATH, 42, thePlayer->getColor()->generateSameColor()));
 
 			Highscore* newHighscore = new Highscore(thePlayer);
-
 			newScore = highscores->compare(newHighscore);
-			//cout << "newscore? " << newScore << endl;
 
 			gameOver = true;
 		}
@@ -1297,9 +1303,8 @@ Monster* Board::createAppropriateMonster() {
 		newLevel = 1;
 	}
 
-	//six is max monster level
-	if (newLevel > 6) {
-		newLevel = 6;
+	if (newLevel > MAX_MONSTER_LEVEL) {
+		newLevel = MAX_MONSTER_LEVEL;
 	}
 
 	//cout << "player equip avg level = " << thePlayer->getAvgEquipLevel() << endl;

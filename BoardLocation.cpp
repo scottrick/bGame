@@ -60,16 +60,16 @@ void BoardLocation::initializeTerrain() {
 	float terrainMultiplier;
 
 	if (type == MOUNTAINS) {
-		terrainMultiplier = 2.0f;
+		terrainMultiplier = 6.0f;
 	}
 	else if (type == LAKE) {
 		terrainMultiplier = 1.4f;
 	}
 	else if (type == PLAINS) {
-		terrainMultiplier = 0.9f;
+		terrainMultiplier = 0.8f;
 	}
 	else if (type == GRASS) {
-		terrainMultiplier = 0.4f;
+		terrainMultiplier = 0.8f;
 	}
 	else {
 		//cout << "BAD TERRAIN TYPE   BoardLocation::initializeTerrain()" << endl;

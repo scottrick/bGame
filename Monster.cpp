@@ -70,15 +70,13 @@ void Monster::generate() { //generate monster based on given level
 
 	float startRed = 0.3f;
 	float endRed = 1.0f;
-	float startGreen = 0.5f;
+	float startGreen = 0.4f;
 	float endGreen = 0.0f;
-	float startBlue = 0.5f;
+	float startBlue = 0.4f;
 	float endBlue = 0.0f;
-	int levelMax = 7; //where the end color is reached
 
 	if (!color) {
-		int diff = levelMax - level - 1;
-		float percentOfEnd = (float)level / (float)levelMax;
+		float percentOfEnd = (float)(level - 1) / (float)(MAX_MONSTER_LEVEL - 1);
 		float percentOfStart = 1.0f - percentOfEnd;
 
 		color = new SColor(
@@ -100,7 +98,7 @@ void Monster::generate() { //generate monster based on given level
 		degrees = DRAGON_SPIN;
 	}
 	else {
-		degrees = (Utility::generateRandomFloat(MONSTER_SPIN_MAX - MONSTER_SPIN_MIN) + MONSTER_SPIN_MIN) * (float)level;
+		degrees = BASE_MONSTER_SPIN + MONSTER_SPIN_LEVEL_MULT * (level - 1);
 	}
 
 	random = Utility::generateRandomInt(level);
@@ -467,7 +465,7 @@ void Monster::draw(int drawOption) {
 		//glutSolidTetrahedron();
 		//glutSolidOctahedron();
 		//glutSolidTeapot(1);
-		glScalef(1.25f, 1.25f, 1.25f);
+		glScalef(1.3f, 1.3f, 1.3f);
 		glutSolidIcosahedron();
 	}
 	else {

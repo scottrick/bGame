@@ -24,7 +24,7 @@ void Gib::initialize() {
 	velocityZ = 0.0f;
 	scale = Utility::generateRandomFloat(0.5f) + 0.22f;
 
-	degrees = (Utility::generateRandomFloat(MONSTER_SPIN_MAX - MONSTER_SPIN_MIN) + MONSTER_SPIN_MIN) * 4.0f;
+	degrees = (Utility::generateRandomFloat(360.0f) + 30.0f);
 	rotationX = Utility::generateRandomFloat(2.0f) - 1.0f;
 	rotationY = Utility::generateRandomFloat(2.0f) - 1.0f;
 	rotationZ = Utility::generateRandomFloat(2.0f) - 1.0f;

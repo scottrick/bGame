@@ -8,6 +8,7 @@ const string GAME_NAME = "Four Dragons";
 
 const int NUM_DRAGONS = 4; //number of dragons to slay to win
 
+const int MAX_MONSTER_LEVEL = 6;
 const int DRAGON_LEVEL = 7; //the level of the dragons
 
 const int BOARD_SIZE = 32;//32;//36; //actual board size is two less, since the outer ring is all unpassable boundary walls
@@ -20,7 +21,7 @@ const int WEST = 4;
 
 const int TURN_FRAME_LENGTH = 24;
 
-const float COLOR_VARIATION = 0.04f;
+const float COLOR_VARIATION = 0.025f;
 
 const float MOUNTAINS_CHANCE = 0.004f; //chance a random square will be initially seeded as a mountain
 const float GRASS_CHANCE = 0.035f; //chance for grass
@@ -99,15 +100,14 @@ const int RANDOM_NAMES_SIZE = 20;
 
 const string HIGHSCORE_FILENAME = "scores.bgame";
 
-const float MONSTER_SPIN_MIN = 12.0f;
-const float MONSTER_SPIN_MAX = 30.0f;
-
-const float DRAGON_SPIN = 210.0f;
+const float BASE_MONSTER_SPIN = 15.0f;
+const float MONSTER_SPIN_LEVEL_MULT = 45.0f;
+const float DRAGON_SPIN = 270.0f;
 
 const int MONSTER_POLY_MIN = 3;
 const int MONSTER_POLY_MAX = 9;
 
-const float TERRAIN_VAR = 0.5f;
+const float TERRAIN_VAR = 0.55f;
 
 const float ITEM_DROP_CHANCE = 0.5f;
 

@@ -77,10 +77,10 @@ void Player::initialize() {
 	rotationX = Utility::generateRandomFloat(2.0f) - 1.0f;
 	rotationY = Utility::generateRandomFloat(2.0f) - 1.0f;
 	rotationZ = Utility::generateRandomFloat(2.0f) - 1.0f;
-	degrees = 11.0f;
+	degrees = 90.0f;
 
 	healthColor = new SColor(0.15f, 0.15f, 0.15f);
-	color = new SColor(0.9f, 0.9f, 0.9f);
+	color = new SColor(1.0f, 1.0f, 1.0f);
 
 	int itemLevel = 0;
 
@@ -537,10 +537,8 @@ void Player::draw(int drawOption) {
 	}
 
 	glRotatef(currentDegrees, rotationX, rotationY, rotationZ);
-	glScalef(0.95f, 0.95f, 0.95f);
-
+	glScalef(1.0f, 1.0f, 1.0f);
 	glColor3f(color->getR(), color->getG(), color->getB());
-	//glScalef(0.5f, 0.5f, 0.5f);
 
 	glutSolidOctahedron();
 }
